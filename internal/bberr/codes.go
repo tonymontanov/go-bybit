@@ -89,31 +89,63 @@ func MapBybitCode(code, _ string) ErrorKind {
 	case "10007":
 		// "user authorization failed"
 		return ErrorKindAuth
+	case "10009":
+		// "IP banned" / "IP not in whitelist"
+		return ErrorKindAuth
 	case "10010":
 		// "unmatched IP"
 		return ErrorKindAuth
 	case "10016":
 		// "server error" — typically 5xx; retryable
 		return ErrorKindNetwork
+	case "10017":
+		// "route not found" — SDK targeted a path Bybit does not expose;
+		// caller built an invalid request.
+		return ErrorKindInvalidRequest
 	case "10018":
 		// "exceeded UID rate limit" — endpoint-level rate limit
+		return ErrorKindRateLimit
+	case "10029":
+		// "request frequency exceeds the limit" (system-wide).
 		return ErrorKindRateLimit
 
 	// ----- 110xxx derivatives trading -----
 	case "110001":
 		// "order does not exist"
 		return ErrorKindInvalidRequest
+	case "110003":
+		// "order price out of permissible range"
+		return ErrorKindInvalidRequest
+	case "110004":
+		// "wallet balance insufficient" — distinct from 110007
+		return ErrorKindExchange
 	case "110007":
 		// "insufficient available balance"
 		return ErrorKindExchange
 	case "110008":
 		// "order has been finished or cancelled"
 		return ErrorKindInvalidRequest
+	case "110009":
+		// "too many active stop orders for the symbol"
+		return ErrorKindInvalidRequest
+	case "110012":
+		// "insufficient available balance for order cost"
+		return ErrorKindExchange
 	case "110017":
 		// "qty does not meet min/max" — caller built an invalid request
 		return ErrorKindInvalidRequest
+	case "110020":
+		// "too many active orders for the symbol"
+		return ErrorKindInvalidRequest
+	case "110025":
+		// "position-mode mismatch" — cross/isolated or hedge/one-way
+		// switch attempted while positions are open.
+		return ErrorKindInvalidRequest
 	case "110043":
 		// "set leverage not modified" / position-mode mismatch
+		return ErrorKindInvalidRequest
+	case "110052":
+		// "leverage out of allowed range for the symbol"
 		return ErrorKindInvalidRequest
 
 	// ----- 130xxx cancel-all / risk-limit family -----
@@ -127,6 +159,9 @@ func MapBybitCode(code, _ string) ErrorKind {
 		return ErrorKindExchange
 	case "170135":
 		// "qty rounding"
+		return ErrorKindInvalidRequest
+	case "170140":
+		// "order amount too small"
 		return ErrorKindInvalidRequest
 
 	default:

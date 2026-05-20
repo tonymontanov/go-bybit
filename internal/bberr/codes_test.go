@@ -55,22 +55,33 @@ func TestMapBybitCode(t *testing.T) {
 		{"sign-auth-fail", "10004", ErrorKindAuth},
 		{"permission-denied", "10005", ErrorKindAuth},
 		{"user-auth-failed", "10007", ErrorKindAuth},
+		{"ip-banned", "10009", ErrorKindAuth},
 		{"unmatched-ip", "10010", ErrorKindAuth},
 		// rate limit
 		{"ip-rate-limit", "10006", ErrorKindRateLimit},
 		{"uid-rate-limit", "10018", ErrorKindRateLimit},
+		{"system-rate-limit", "10029", ErrorKindRateLimit},
 		{"cancel-all-rate-limit", "130150", ErrorKindRateLimit},
 		// invalid request
 		{"params-error", "10001", ErrorKindInvalidRequest},
+		{"route-not-found", "10017", ErrorKindInvalidRequest},
 		{"order-does-not-exist", "110001", ErrorKindInvalidRequest},
+		{"order-price-out-of-range", "110003", ErrorKindInvalidRequest},
 		{"order-already-finished", "110008", ErrorKindInvalidRequest},
+		{"too-many-stop-orders", "110009", ErrorKindInvalidRequest},
 		{"qty-out-of-range", "110017", ErrorKindInvalidRequest},
+		{"too-many-active-orders", "110020", ErrorKindInvalidRequest},
+		{"position-mode-mismatch", "110025", ErrorKindInvalidRequest},
 		{"set-leverage-no-change", "110043", ErrorKindInvalidRequest},
+		{"leverage-out-of-range", "110052", ErrorKindInvalidRequest},
 		{"qty-rounding-spot", "170135", ErrorKindInvalidRequest},
+		{"order-amount-too-small-spot", "170140", ErrorKindInvalidRequest},
 		// network (transient)
 		{"server-error", "10016", ErrorKindNetwork},
 		// exchange
+		{"wallet-balance-insufficient", "110004", ErrorKindExchange},
 		{"insufficient-balance-derivatives", "110007", ErrorKindExchange},
+		{"insufficient-balance-for-cost", "110012", ErrorKindExchange},
 		{"insufficient-balance-spot", "170131", ErrorKindExchange},
 		// fallback
 		{"unknown-falls-back-to-exchange", "999999", ErrorKindExchange},

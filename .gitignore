@@ -1,6 +1,10 @@
 # Build artifacts
 /bin/
 /dist/
+# Stray example binaries when running `go build ./examples/...` from root.
+/marketdata
+/trade
+/stream-orderbook
 
 # Test caches and coverage
 *.test

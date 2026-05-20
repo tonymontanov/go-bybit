@@ -33,11 +33,12 @@ transparently. The application-level keep-alive ({"op":"ping"} every
 The SDK module path is github.com/tonymontanov/go-bybit. Versioning
 follows semver starting at v1.0.0.
 
-Quick start (after the linears package is implemented in M1):
+Quick start:
 
 	import (
 	    bybit "github.com/tonymontanov/go-bybit"
-	    _ "github.com/tonymontanov/go-bybit/linears"
+	    "github.com/tonymontanov/go-bybit/linears"
+	    "github.com/tonymontanov/go-bybit/linears/types"
 	)
 
 	func main() {
@@ -49,8 +50,20 @@ Quick start (after the linears package is implemented in M1):
 	    if err != nil { panic(err) }
 	    defer c.Close()
 
-	    // var lc = c.Linears().(*linears.Client) — see linears/doc.go
-	    _ = c
+	    var lc = c.Linears().(*linears.Client)
+
+	    // REST: 50-level orderbook snapshot.
+	    var ob, _ = lc.MarketData().GetOrderBook(ctx, "BTCUSDT", 50)
+	    _ = ob
+
+	    // WS: live engine-backed top-of-book updates.
+	    _ = lc.Stream().WatchOrderBook(ctx, "BTCUSDT", 50, 5,
+	        func(s types.OrderBookSnapshot) { _ = s },
+	        func(err error) { _ = err },
+	    )
 	}
+
+End-to-end runnable demos live under examples/ (marketdata, trade,
+stream-orderbook).
 */
 package bybit

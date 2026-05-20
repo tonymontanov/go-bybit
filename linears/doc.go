@@ -19,8 +19,11 @@ SUB-CLIENTS:
     SetLeverage, SetPositionMode, ClosePosition.
   - (*Client).MarketData() : GetSymbolInfo, GetOrderBook,
     GetHistoricalCandles.
-  - (*Client).Stream()     : Watch* (WebSocket subscriptions).
-    Stub in M1; populated in M3.
+  - (*Client).Stream()     : WatchOrderBook (engine-backed),
+    WatchTicker (delta merging), WatchTrades, WatchKline, plus the
+    private WatchOrders / WatchPositions / WatchExecutions / WatchWallet.
+    All Watch* are non-blocking — they spawn the supervisor and return
+    once the subscription has been queued.
 
 TYPES:
 All domain structs (CreateOrderRequest, OrderInfo, PositionInfo, ...)
