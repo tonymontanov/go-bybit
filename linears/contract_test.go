@@ -379,6 +379,7 @@ func TestContract_GetOpenOrders_SinglePage(t *testing.T) {
 				"orderStatus":"New",
 				"positionIdx":0,
 				"reduceOnly":false,
+				"rejectReason":"EC_NoError",
 				"createdTime":"1700000003000",
 				"updatedTime":"1700000003500"
 			}],
@@ -406,6 +407,9 @@ func TestContract_GetOpenOrders_SinglePage(t *testing.T) {
 	}
 	if orders[0].CreatedAtMs != 1700000003000 {
 		t.Fatalf("CreatedAtMs: got %d", orders[0].CreatedAtMs)
+	}
+	if orders[0].RejectReason != "" {
+		t.Fatalf("RejectReason: got %q, want empty (EC_NoError must be masked)", orders[0].RejectReason)
 	}
 }
 

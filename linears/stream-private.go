@@ -102,7 +102,7 @@ func (s *StreamClient) WatchOrders(
 					Status:        types.OrderStatus(rows[i].OrderStatus),
 					PositionIdx:   types.PositionIdx(rows[i].PositionIdx),
 					ReduceOnly:    rows[i].ReduceOnly,
-					RejectReason:  rows[i].RejectReason,
+					RejectReason:  normalizeRejectReason(rows[i].RejectReason),
 					CreatedAtMs:   ms(rows[i].CreatedTime),
 					UpdatedAtMs:   ms(rows[i].UpdatedTime),
 				})

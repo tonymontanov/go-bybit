@@ -155,6 +155,16 @@ func (t *TradingClient) CreateOrder(ctx context.Context, req types.CreateOrderRe
 // qty / price (and the TPSL pair, not exposed in v1) — side, type and
 // timeInForce are immutable; for those the order must be cancelled and
 // re-created.
+//
+// Note on the returned OrderInfo: Bybit's /v5/order/amend response body
+// carries ONLY orderId and orderLinkId. The SDK fills the returned
+// OrderInfo with those plus the AMENDED fields from the request
+// (NewPrice / NewQuantity); fields that were not part of the amend
+// request (Side, OrderType, Status, Avg, Leaves, ...) stay at their
+// zero values. Callers that need the full post-amend state must fetch
+// it via Account().GetOpenOrders / GetOrderHistory or rely on the
+// private "order" WebSocket stream, both of which Bybit publishes
+// authoritatively.
 func (t *TradingClient) ModifyOrder(ctx context.Context, req types.ModifyOrderRequest) (types.OrderInfo, error) {
 	var info types.OrderInfo
 

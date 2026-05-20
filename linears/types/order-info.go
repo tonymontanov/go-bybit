@@ -26,7 +26,12 @@ FIELDS:
                       subset; unknown statuses are surfaced verbatim.
   - PositionIdx     — 0/1/2 — copy of the request value.
   - ReduceOnly      — reduceOnly flag echo.
-  - RejectReason    — Bybit rejection reason (empty when not rejected).
+  - RejectReason    — Bybit rejection reason. The SDK normalizes Bybit's
+                      "EC_NoError" sentinel (used on every non-rejected
+                      order) to the empty string so callers can branch
+                      on `RejectReason != ""`. Other reason codes
+                      (e.g. "EC_PostOnlyWillTakeLiquidity") are
+                      surfaced verbatim.
   - CreatedAtMs     — order creation timestamp (ms since epoch).
   - UpdatedAtMs     — last server-side update timestamp.
   - RateLimits      — snapshot of rate-limit headers received with the

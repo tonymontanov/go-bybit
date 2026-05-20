@@ -516,7 +516,7 @@ func convertOrderInfo(src orderEntry) types.OrderInfo {
 		Status:        types.OrderStatus(src.OrderStatus),
 		PositionIdx:   types.PositionIdx(src.PositionIdx),
 		ReduceOnly:    src.ReduceOnly,
-		RejectReason:  src.RejectReason,
+		RejectReason:  normalizeRejectReason(src.RejectReason),
 		CreatedAtMs:   ms(src.CreatedTime),
 		UpdatedAtMs:   ms(src.UpdatedTime),
 	}

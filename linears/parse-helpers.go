@@ -44,3 +44,18 @@ func ms(s string) int64 {
 	}
 	return n
 }
+
+// normalizeRejectReason maps Bybit V5's "no rejection" sentinel
+// "EC_NoError" to an empty string so OrderInfo.RejectReason is empty
+// when the order was NOT rejected. Bybit ships "EC_NoError" on every
+// non-rejected order in REST and WS payloads — surfacing it verbatim
+// confuses downstream consumers that branch on `RejectReason != ""`.
+//
+// Other reason codes (e.g. "EC_PostOnlyWillTakeLiquidity") are
+// returned unchanged.
+func normalizeRejectReason(s string) string {
+	if s == "EC_NoError" {
+		return ""
+	}
+	return s
+}

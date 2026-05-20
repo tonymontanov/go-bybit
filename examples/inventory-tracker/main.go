@@ -113,7 +113,15 @@ func main() {
 	}
 
 	fmt.Println("\n>>> closing position")
-	var closeOrder, closeErr = lc.Account().ClosePosition(ctx, opt.Symbol, types.PositionIdxOneWay)
+	// Detach the close path from the long-lived ctx with a hard 10s
+	// budget so a stuck REST call never silently hangs the example.
+	// SIGINT still cancels via the parent ctx (see signal handler above).
+	var closeCtx, closeCancel = context.WithTimeout(ctx, 10*time.Second)
+	var t0 time.Time = time.Now()
+	fmt.Printf(">>> calling Account.ClosePosition(idx=OneWay) [budget=10s]\n")
+	var closeOrder, closeErr = lc.Account().ClosePosition(closeCtx, opt.Symbol, types.PositionIdxOneWay)
+	closeCancel()
+	fmt.Printf(">>> ClosePosition returned in %s\n", time.Since(t0).Round(time.Millisecond))
 	if closeErr != nil {
 		log.Fatalf("ClosePosition: %s", exhelp.Classify(closeErr))
 	}
@@ -123,6 +131,7 @@ func main() {
 		fmt.Printf(">>> close request accepted: ordId=%s\n", closeOrder.OrderID)
 	}
 
+	fmt.Println(">>> draining inventory stream for 3s...")
 	select {
 	case <-time.After(3 * time.Second):
 	case <-ctx.Done():
@@ -135,7 +144,9 @@ func main() {
 	fmt.Printf("execution events : %d\n", inv.execEvents.Load())
 	fmt.Printf("wallet events    : %d\n", inv.walletEvents.Load())
 
-	var finalPos, ferr = lc.Account().GetPosition(context.Background(), opt.Symbol)
+	var finalCtx, finalCancel = context.WithTimeout(context.Background(), 10*time.Second)
+	defer finalCancel()
+	var finalPos, ferr = lc.Account().GetPosition(finalCtx, opt.Symbol)
 	if ferr != nil {
 		fmt.Printf("final position fetch error: %s\n", exhelp.Classify(ferr))
 		return

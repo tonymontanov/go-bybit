@@ -8,8 +8,14 @@ everything is public.
 
 COVERAGE:
   - linears.MarketData().GetSymbolInfo
-  - linears.MarketData().GetOrderBook        (snapshot, depth 5)
+  - linears.MarketData().GetOrderBook        (snapshot)
   - linears.MarketData().GetHistoricalCandles (1m, last 5)
+
+NOTES:
+  - Bybit V5 only accepts orderbook depth from {1, 50, 200, 500}; the
+    SDK clamps any other value to the nearest allowed level. We request
+    a small depth and print the TOP-N levels (per side) to keep the
+    output readable.
 
 USAGE:
 
@@ -42,7 +48,9 @@ func main() {
 	fmt.Printf("=== Market data for %s (testnet=%v demo=%v) ===\n\n", opt.Symbol, opt.Testnet, opt.Demo)
 
 	dumpSymbolInfo(ctx, lc, opt.Symbol)
-	dumpOrderBook(ctx, lc, opt.Symbol, 5)
+	// requestedDepth=1 → Bybit returns one level per side (no clamping).
+	// printRows caps the on-screen output regardless of returned depth.
+	dumpOrderBook(ctx, lc, opt.Symbol, 1, 10)
 	dumpCandles(ctx, lc, opt.Symbol, types.Timeframe1m, 5)
 }
 
@@ -64,24 +72,37 @@ func dumpSymbolInfo(ctx context.Context, lc *linears.Client, symbol string) {
 		info.MinLeverage, info.MaxLeverage, info.LeverageStep)
 }
 
-func dumpOrderBook(ctx context.Context, lc *linears.Client, symbol string, depth int) {
-	var ob, err = lc.MarketData().GetOrderBook(ctx, symbol, depth)
+func dumpOrderBook(ctx context.Context, lc *linears.Client, symbol string, requestedDepth, printRows int) {
+	var ob, err = lc.MarketData().GetOrderBook(ctx, symbol, requestedDepth)
 	if err != nil {
 		fmt.Printf("[order-book] error: %s\n\n", exhelp.Classify(err))
 		return
 	}
-	fmt.Printf("[order-book depth=%d ts=%d u=%d]\n", depth, ob.TsMs, ob.UpdateID)
-	fmt.Println("  asks (top down → close to mid):")
+	var asks int = len(ob.Asks)
+	var bids int = len(ob.Bids)
+	fmt.Printf("[order-book requested=%d returned=asks:%d/bids:%d ts=%d u=%d]\n",
+		requestedDepth, asks, bids, ob.TsMs, ob.UpdateID)
+
+	var askShown int = printRows
+	if askShown > asks {
+		askShown = asks
+	}
+	var bidShown int = printRows
+	if bidShown > bids {
+		bidShown = bids
+	}
+
+	fmt.Printf("  asks (top down → close to mid, showing %d/%d):\n", askShown, asks)
 	var i int
-	for i = len(ob.Asks) - 1; i >= 0; i-- {
+	for i = askShown - 1; i >= 0; i-- {
 		fmt.Printf("    %s × %s\n", ob.Asks[i].Price, ob.Asks[i].Size)
 	}
-	if len(ob.Asks) > 0 && len(ob.Bids) > 0 {
+	if asks > 0 && bids > 0 {
 		var spread = ob.Asks[0].Price.Sub(ob.Bids[0].Price)
 		fmt.Printf("  --- spread = %s ---\n", spread)
 	}
-	fmt.Println("  bids:")
-	for i = 0; i < len(ob.Bids); i++ {
+	fmt.Printf("  bids (showing %d/%d):\n", bidShown, bids)
+	for i = 0; i < bidShown; i++ {
 		fmt.Printf("    %s × %s\n", ob.Bids[i].Price, ob.Bids[i].Size)
 	}
 	fmt.Println()

@@ -101,8 +101,11 @@ func main() {
 	if modErr != nil {
 		log.Printf("ModifyOrder: %s", exhelp.Classify(modErr))
 	} else {
-		fmt.Printf("modified: orderId=%s qty=%s price=%s\n",
-			info2.OrderID, info2.Quantity, info2.Price)
+		// Bybit's /v5/order/amend response only carries orderId/orderLinkId;
+		// the SDK echoes the AMENDED fields (NewQuantity / NewPrice) into
+		// OrderInfo. Untouched fields stay zero — print only what changed.
+		fmt.Printf("modified: orderId=%s clOrdId=%s newQty=%s\n",
+			info2.OrderID, info2.ClientOrderID, info2.Quantity)
 	}
 
 	fmt.Println("cancelling")

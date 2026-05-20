@@ -296,3 +296,27 @@ func TestJoinUpper(t *testing.T) {
 	}
 }
 
+func TestNormalizeRejectReason(t *testing.T) {
+	t.Parallel()
+
+	type tc struct {
+		in   string
+		want string
+	}
+	var cases []tc = []tc{
+		{"", ""},
+		{"EC_NoError", ""},
+		{"EC_PostOnlyWillTakeLiquidity", "EC_PostOnlyWillTakeLiquidity"},
+		{"EC_PerCancelRequest", "EC_PerCancelRequest"},
+		{"EC_NoErrorish", "EC_NoErrorish"},
+	}
+	var i int
+	for i = 0; i < len(cases); i++ {
+		var c tc = cases[i]
+		var got string = normalizeRejectReason(c.in)
+		if got != c.want {
+			t.Fatalf("normalizeRejectReason(%q): got %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+

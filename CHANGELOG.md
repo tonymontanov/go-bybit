@@ -5,6 +5,32 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
+### Changed
+
+- `OrderInfo.RejectReason` is now normalized to an empty string when
+  Bybit ships its `"EC_NoError"` sentinel for non-rejected orders.
+  Other reason codes are surfaced verbatim. The change is symmetric
+  across REST (`Account.GetOpenOrders` / `GetOrderHistory`) and the
+  private `order` WebSocket stream. Callers can now reliably branch on
+  `o.RejectReason != ""` without filtering "EC_NoError".
+- `linears.TradingClient.ModifyOrder`: doc clarified — Bybit's
+  `/v5/order/amend` response contains only `orderId / orderLinkId`,
+  the SDK echoes the AMENDED fields (`NewPrice` / `NewQuantity`) into
+  `OrderInfo`; untouched fields stay at zero. To get the full
+  post-amend state poll `GetOpenOrders` or watch the `order` WS stream.
+
+### Examples
+
+- `examples/simple-trade`: amend output now prints only `newQty`
+  (the amended field) instead of confusing `price=0`.
+- `examples/market-data`: prints `requested=K returned=asks/bids=N`
+  and caps the on-screen rows to TOP-10 — Bybit V5 only accepts depth
+  in {1, 50, 200, 500}, so the SDK clamps to the nearest allowed
+  level; the example now makes that explicit.
+- `examples/inventory-tracker`: progress logs around `ClosePosition`
+  with a 10-second per-call REST budget so a stuck request fails
+  loudly instead of hanging the demo.
+
 ## [v1.0.0-alpha.0] — 2026-05-20
 
 Initial public release of the Bybit V5 Go SDK. Covers the **linear**
@@ -58,10 +84,22 @@ profiles are out of scope for v1.
     missing.
 
 - **Examples** (M4)
-  - `examples/marketdata`: instrument metadata + REST orderbook snapshot.
-  - `examples/trade`: signed PostOnly limit create + cancel.
-  - `examples/stream-orderbook`: live BTCUSDT order book over WS with
-    a local engine.
+  - `examples/market-data`: public REST — instrument spec, orderbook
+    snapshot, historical klines.
+  - `examples/orderbook-watcher`: live order book over WS with a local
+    engine (snapshot + deltas).
+  - `examples/public-streams`: aggregated public WS (orderbook + ticker
+    + trades + 1m klines).
+  - `examples/account-info`: read-only signed REST — wallet, position,
+    open orders.
+  - `examples/inventory-monitor`: private WS — `order`, `position`,
+    `execution`, `wallet`.
+  - `examples/simple-trade`: signed PostOnly limit create → amend →
+    cancel.
+  - `examples/inventory-tracker`: end-to-end MARKET BUY → hold →
+    `ClosePosition` with live private-stream updates.
+  - Shared `examples/internal/exhelp` helper (.env loading, guards,
+    classify).
 
 ### Notes
 
