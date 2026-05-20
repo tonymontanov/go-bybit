@@ -1,0 +1,21 @@
+# Build artifacts
+/bin/
+/dist/
+
+# Test caches and coverage
+*.test
+*.out
+coverage.txt
+profile.cov
+
+# Editor / OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local secrets (never commit)
+.env
+.env.local
+*.pem
+*.key
