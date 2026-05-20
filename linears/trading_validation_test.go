@@ -20,7 +20,6 @@ Coverage:
 package linears
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/shopspring/decimal"
@@ -297,11 +296,3 @@ func TestJoinUpper(t *testing.T) {
 	}
 }
 
-// Sanity check: errStreamNotImplemented is the only sentinel exposed by
-// stream.go for M1 stub callers.
-func TestStreamStubError(t *testing.T) {
-	t.Parallel()
-	if !errors.Is(errStreamNotImplemented, errStreamNotImplemented) {
-		t.Fatalf("errStreamNotImplemented self-comparison broken")
-	}
-}

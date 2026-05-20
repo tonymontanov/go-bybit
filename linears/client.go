@@ -22,7 +22,10 @@ ID CONSTRAINTS:
 package linears
 
 import (
+	"sync"
+
 	bybit "github.com/tonymontanov/go-bybit"
+	"github.com/tonymontanov/go-bybit/internal/ws"
 )
 
 // Client — Bybit V5 linears profile client.
@@ -33,6 +36,11 @@ type Client struct {
 	account    *AccountClient
 	marketData *MarketDataClient
 	stream     *StreamClient
+
+	publicWsOnce  sync.Once
+	publicWs      *ws.Conn
+	privateWsOnce sync.Once
+	privateWs     *ws.Conn
 }
 
 // NewClient creates a linears client. The parent argument is required.
@@ -70,6 +78,55 @@ func (c *Client) logger() bybit.Logger { return c.parent.Logger() }
 func (c *Client) rest() restDoer       { return c.parent.REST() }
 func (c *Client) config() bybit.Config { return c.parent.Config() }
 func (c *Client) signerEnabled() bool  { return c.parent.Signer().Enabled() }
+
+// publicConn lazily creates and returns the public (linear) WS connection.
+// It is shared by every Watch* method on the StreamClient that talks to
+// the public endpoint.
+func (c *Client) publicConn() *ws.Conn {
+	c.publicWsOnce.Do(func() {
+		var cfg bybit.Config = c.parent.Config()
+		c.publicWs = ws.NewConn(
+			toWsConfig(cfg, cfg.WS.PublicLinearURL, false),
+			c.parent.Signer(),
+			cfg.Logger,
+			cfg.Metrics,
+		)
+	})
+	return c.publicWs
+}
+
+// privateConn lazily creates and returns the private WS connection.
+func (c *Client) privateConn() *ws.Conn {
+	c.privateWsOnce.Do(func() {
+		var cfg bybit.Config = c.parent.Config()
+		c.privateWs = ws.NewConn(
+			toWsConfig(cfg, cfg.WS.PrivateURL, true),
+			c.parent.Signer(),
+			cfg.Logger,
+			cfg.Metrics,
+		)
+	})
+	return c.privateWs
+}
+
+// toWsConfig copies the public WsConfig into the internal ws.Config.
+func toWsConfig(cfg bybit.Config, url string, private bool) ws.Config {
+	return ws.Config{
+		URL:                     url,
+		IsPrivate:               private,
+		HandshakeTimeout:        cfg.WS.HandshakeTimeout,
+		ReadTimeout:             cfg.WS.ReadTimeout,
+		WriteTimeout:            cfg.WS.WriteTimeout,
+		PingInterval:            cfg.WS.PingInterval,
+		AuthExpiresWindow:       cfg.WS.AuthExpiresWindow,
+		AuthTimeout:             cfg.WS.AuthTimeout,
+		ReconnectInitialBackoff: cfg.WS.ReconnectInitialBackoff,
+		ReconnectMaxBackoff:     cfg.WS.ReconnectMaxBackoff,
+		ReconnectJitter:         cfg.WS.ReconnectJitter,
+		ReadBufferSize:          cfg.WS.ReadBufferSize,
+		WriteBufferSize:         cfg.WS.WriteBufferSize,
+	}
+}
 
 // init registers the factory in the root package so that bybit.Client.
 // Linears() lazily returns *linears.Client. This allows users to avoid

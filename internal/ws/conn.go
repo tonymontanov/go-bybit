@@ -85,11 +85,17 @@ type Subscription struct {
 	// "execution.linear", ...). Required.
 	Topic string
 	// Handler is invoked for every push frame whose topic matches. Args
-	// are the topic (so the same handler can serve multiple symbols if
-	// the caller wants) and the raw bytes of the frame's "data" field.
+	// are:
+	//
+	//   - topic    : the wire topic (so a single handler can serve
+	//                multiple symbols if the caller wants);
+	//   - pushType : the envelope's "type" field, "snapshot" / "delta" /
+	//                "" (private channels typically omit it);
+	//   - payload  : the raw bytes of the "data" field.
+	//
 	// Push frames whose data field is missing or null still call the
 	// handler with payload=nil — handlers must be defensive.
-	Handler func(topic string, payload []byte)
+	Handler func(topic, pushType string, payload []byte)
 	// Reset is called once before every (re)subscribe. Used by the
 	// orderbook engine to drop any local state so the next snapshot
 	// pushed by the server is treated as the new authoritative state.
@@ -504,7 +510,7 @@ func (c *Conn) readLoop(ctx context.Context, socket *websocket.Conn) error {
 			c.cDropped.Inc()
 			continue
 		}
-		sub.Handler(env.Topic, env.Data)
+		sub.Handler(env.Topic, env.Type, env.Data)
 	}
 }
 

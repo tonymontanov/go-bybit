@@ -15,7 +15,7 @@ Module path: `github.com/tonymontanov/go-bybit`
 | M0 internal/ws (auth, app-ping, reconnect+jitter, resubscribe, dispatch) | done | mock-server tests |
 | **M1** `linears/` REST core (Trading / Account / MarketData) | done | CreateOrder / Modify / Cancel / Batch\* / CancelAll / CancelForgotten / GetOpenOrders / GetPosition / GetWalletBalance / SetLeverage / SetPositionMode / ClosePosition / GetSymbolInfo / GetOrderBook / GetHistoricalCandles + httptest contract tests |
 | **M2** `orderbook/` engine (snapshot + delta + u/seq + resync) | done | sequence + service-restart gap detection (no CRC32 — Bybit does not ship one) |
-| **M3** `linears/stream.go` (WS subscriptions) | planned | orderbook / tickers / publicTrade / position / order / execution |
+| **M3** `linears/stream.go` (WS subscriptions) | done | public: WatchOrderBook (engine-backed) / WatchTicker (delta merge) / WatchTrades / WatchKline; private: WatchOrders / WatchPositions / WatchExecutions / WatchWallet; mock-WS tests for all paths |
 | **M4** errors mapping + contract tests + examples | planned | JSON fixtures from production responses |
 | **M5** `spot/` profile | planned | mirrors `linears/` |
 | **MVP+** testnet / demo support | deferred | flags exist already in Config; URL switching is wired but not yet used in v1 |

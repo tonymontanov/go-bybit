@@ -184,7 +184,7 @@ func TestConn_PublicSubscribeAndDispatch(t *testing.T) {
 	var got = make(chan []byte, 1)
 	var err = c.Subscribe(&Subscription{
 		Topic: "tickers.BTCUSDT",
-		Handler: func(_ string, payload []byte) {
+		Handler: func(_, _ string, payload []byte) {
 			select {
 			case got <- payload:
 			default:
@@ -249,7 +249,7 @@ func TestConn_PrivateAuthHandshake(t *testing.T) {
 	var got = make(chan []byte, 1)
 	_ = c.Subscribe(&Subscription{
 		Topic: "position",
-		Handler: func(_ string, payload []byte) {
+		Handler: func(_, _ string, payload []byte) {
 			select {
 			case got <- payload:
 			default:
@@ -311,7 +311,7 @@ func TestConn_TopicPrefixFallback(t *testing.T) {
 	var hits int32
 	_ = c.Subscribe(&Subscription{
 		Topic: "execution",
-		Handler: func(topic string, _ []byte) {
+		Handler: func(topic, _ string, _ []byte) {
 			if topic == "execution.linear" {
 				atomic.AddInt32(&hits, 1)
 			}
