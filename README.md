@@ -13,7 +13,7 @@ Module path: `github.com/tonymontanov/go-bybit`
 | M0 internal/auth (HMAC-SHA256 hex for REST + WS) | done | canonical-vector + property tests |
 | M0 internal/rest (V5 envelope, X-BAPI-* headers, observers) | done | httptest-based tests |
 | M0 internal/ws (auth, app-ping, reconnect+jitter, resubscribe, dispatch) | done | mock-server tests |
-| **M1** `linears/` REST core (Trading / Account / MarketData) | planned | CreateOrder / Modify / Cancel / Batch* / GetOpenOrders / GetPosition / GetSymbolInfo / GetOrderBook / GetHistoricalCandles |
+| **M1** `linears/` REST core (Trading / Account / MarketData) | done | CreateOrder / Modify / Cancel / Batch\* / CancelAll / CancelForgotten / GetOpenOrders / GetPosition / GetWalletBalance / SetLeverage / SetPositionMode / ClosePosition / GetSymbolInfo / GetOrderBook / GetHistoricalCandles + httptest contract tests |
 | **M2** `orderbook/` engine (snapshot + delta + u/seq + resync) | planned | no CRC32 — Bybit does not ship one |
 | **M3** `linears/stream.go` (WS subscriptions) | planned | orderbook / tickers / publicTrade / position / order / execution |
 | **M4** errors mapping + contract tests + examples | planned | JSON fixtures from production responses |
