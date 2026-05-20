@@ -2,9 +2,13 @@
 /bin/
 /dist/
 # Stray example binaries when running `go build ./examples/...` from root.
-/marketdata
-/trade
-/stream-orderbook
+/account-info
+/inventory-monitor
+/inventory-tracker
+/market-data
+/orderbook-watcher
+/public-streams
+/simple-trade
 
 # Test caches and coverage
 *.test

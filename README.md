@@ -83,10 +83,16 @@ go-bybit/
   linears/                # M1+
   spot/                   # M5+
   orderbook/              # M2+
-  examples/               # M4+
-    marketdata/           # public REST: instrument-info + orderbook
-    trade/                # signed REST: PostOnly create + cancel
-    stream-orderbook/     # WS: live BTCUSDT order book, top-of-book
+  examples/               # runnable end-to-end demos (see examples/README.md)
+    market-data/          # public REST
+    orderbook-watcher/    # public WS engine-backed top-of-book
+    public-streams/       # WS multi-stream (orderbook+ticker+trades+kline)
+    account-info/         # private REST read-only
+    inventory-monitor/    # private WS long-running monitor
+    simple-trade/         # signed REST CRUD (PostOnly create→amend→cancel)
+    inventory-tracker/    # real market BUY → live streams → ClosePosition
+    internal/exhelp/      # shared env loader + error formatter
+  scripts/run.sh          # loads .env and forwards to `go run`
 ```
 
 ## Architecture (brief)
