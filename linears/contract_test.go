@@ -125,6 +125,16 @@ func TestContract_GetSymbolInfo(t *testing.T) {
 	if !info.TickSize.Equal(dq("0.10")) {
 		t.Fatalf("TickSize: got %v", info.TickSize)
 	}
+	// Bybit V5 priceFilter содержит minPrice/maxPrice — оба должны
+	// прокидываться, иначе downstream-callers не смогут clamp'ить
+	// цену ордера и получат zero-price после Round (видели в проде на
+	// PARTIUSDT: tickSize=0.00001, maxPrice=199.99998).
+	if !info.MinPrice.Equal(dq("0.10")) {
+		t.Fatalf("MinPrice: got %v", info.MinPrice)
+	}
+	if !info.MaxPrice.Equal(dq("1999999.80")) {
+		t.Fatalf("MaxPrice: got %v", info.MaxPrice)
+	}
 	if !info.QtyStep.Equal(dq("0.001")) {
 		t.Fatalf("QtyStep: got %v", info.QtyStep)
 	}

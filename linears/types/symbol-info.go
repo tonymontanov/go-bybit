@@ -22,6 +22,8 @@ FIELDS:
                         "LinearFutures" (USDC futures), etc.
   - Status            — current trading status, e.g. "Trading", "Closed".
   - TickSize          — minimum price increment (priceFilter.tickSize).
+  - MinPrice          — minimum allowed order price (priceFilter.minPrice).
+  - MaxPrice          — maximum allowed order price (priceFilter.maxPrice).
   - QtyStep           — minimum quantity increment (lotSizeFilter.qtyStep).
   - MinOrderQty       — minimum order quantity.
   - MaxOrderQty       — maximum quantity for a Limit order.
@@ -49,6 +51,8 @@ type SymbolInfo struct {
 	ContractType      string
 	Status            string
 	TickSize          decimal.Decimal
+	MinPrice          decimal.Decimal
+	MaxPrice          decimal.Decimal
 	QtyStep           decimal.Decimal
 	MinOrderQty       decimal.Decimal
 	MaxOrderQty       decimal.Decimal

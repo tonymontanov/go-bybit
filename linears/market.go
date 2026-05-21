@@ -307,6 +307,8 @@ func convertSymbolInfo(src instrumentsEntry) types.SymbolInfo {
 		ContractType:      src.ContractType,
 		Status:            src.Status,
 		TickSize:          tick,
+		MinPrice:          dec(src.PriceFilter.MinPrice),
+		MaxPrice:          dec(src.PriceFilter.MaxPrice),
 		QtyStep:           step,
 		MinOrderQty:       dec(src.LotSizeFilter.MinOrderQty),
 		MaxOrderQty:       dec(src.LotSizeFilter.MaxOrderQty),
