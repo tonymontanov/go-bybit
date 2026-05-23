@@ -2,22 +2,17 @@
 FILE: linears/types/order-book-level.go
 
 DESCRIPTION:
-A single order book level. Used in:
-  - REST snapshot (GetOrderBook);
-  - orderbook engine snapshot/delta application (M2);
-  - WebSocket "orderbook.{depth}.{symbol}" topic dispatch (M3).
-
-Bybit V5 represents a level as a positional [price, size] pair of
-strings: ["27045.00", "0.123"]. The SDK normalizes both parts into
-decimal.Decimal at the boundary.
+Type alias re-export of the protocol-common
+`github.com/tonymontanov/go-bybit/v2/types.OrderBookLevel`. The wire
+format is byte-identical across every Bybit V5 category, so the
+linears profile reuses the common type rather than redefining it.
+The alias preserves type identity — code that constructs
+`linears/types.OrderBookLevel{...}` continues to compile unchanged.
 */
 
 package types
 
-import "github.com/shopspring/decimal"
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
 
-// OrderBookLevel — one order book level.
-type OrderBookLevel struct {
-	Price decimal.Decimal
-	Size  decimal.Decimal
-}
+// OrderBookLevel — one order book level. See commontypes.OrderBookLevel.
+type OrderBookLevel = commontypes.OrderBookLevel

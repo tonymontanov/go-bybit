@@ -11,7 +11,75 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
-(no changes since v2.0.0)
+(no changes since v2.1.0)
+
+## [v2.1.0] — 2026-05-23
+
+Pulls the protocol-common type definitions out of `linears/types/` and
+`spot/types/` into a new neutral package
+`github.com/tonymontanov/go-bybit/v2/types/`. The two profile packages
+become thin layer-2 wrappers (alias re-exports + profile-specific
+types) on top of the layer-1 common package.
+
+This eliminates ~9 files of byte-identical parallel copy-paste between
+the two profiles and matches the layout of `github.com/tonymontanov/go-okx/v2`
+(top-level `types/` + per-profile alias re-exports).
+
+### Compatibility
+
+The refactor is **non-breaking** at the Go API level:
+
+- All previously-exported names under `linears/types` and `spot/types`
+  remain accessible at the same paths.
+- Aliases preserve type identity — `linears/types.OrderBookLevel` and
+  `spot/types.OrderBookLevel` are now both spelled
+  `github.com/tonymontanov/go-bybit/v2/types.OrderBookLevel` under the
+  hood. Code that constructs / passes these values continues to
+  compile unchanged.
+- Constants are re-exported with `const X = commontypes.X`, so call
+  sites like `linears/types.SideTypeBuy` or `spot/types.OrderStatusFilled`
+  do not need updates.
+
+### Added
+
+- **`types/` (new package)** — protocol-common domain types shared
+  across all V5 profiles:
+  - `enums.go`: `Category`, `SideType`, `OrderType`,
+    `TimeInForceType`, `OrderStatus` (base catalogue), `AccountType`.
+  - `order-book-level.go`, `order-book-snapshot.go`,
+    `timeframe.go`, `candle.go` (+ `Candles`),
+    `trade-update.go`, `kline-update.go`,
+    `cancel-order-request.go`, `balance.go` (+ `CoinBalance`).
+
+### Changed
+
+- **`linears/types/`** — `enums.go`, `order-book-level.go`,
+  `order-book-snapshot.go`, `timeframe.go`, `candle.go`,
+  `trade-update.go`, `kline-update.go`, `cancel-order-request.go`,
+  `balance.go` rewritten as alias re-exports of the common package.
+  Linears-only types (`PositionIdx`, `PositionMode`, trigger-only
+  `OrderStatus` constants `Untriggered` / `Triggered`,
+  `SymbolInfo`, `CreateOrderRequest`, `ModifyOrderRequest`,
+  `OrderInfo`, `ExecutionInfo`, `TickerUpdate`, `PositionInfo`,
+  `BatchOrderResult`) remain declared locally.
+- **`spot/types/`** — same alias-rewrite for the protocol-common
+  files. Spot-only types (`MarginTrading`, `MarketUnit`,
+  `SymbolInfo`, `CreateOrderRequest`, `ModifyOrderRequest`,
+  `OrderInfo`, `ExecutionInfo`, `TickerUpdate`, `BatchOrderResult`)
+  remain declared locally. The spot profile no longer pulls in
+  `linears/types` (the two profile packages are now siblings, not
+  cousins).
+- **Documentation** — `linears/types/doc.go` and `spot/types/doc.go`
+  rewritten to describe the new layered model.
+
+### Internal
+
+- `internal/v5common/` is unchanged. The generic
+  `ConvertOrderBookLevels[T]` helper continues to work because the
+  per-profile `OrderBookLevel` types alias the same common type.
+- The `orderbook/` engine continues to use its own internal `Level`
+  type for engine-level isolation; profile packages adapt at the
+  boundary as before.
 
 ## [v2.0.0] — 2026-05-23
 

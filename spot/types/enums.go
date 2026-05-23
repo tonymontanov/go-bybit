@@ -2,91 +2,105 @@
 FILE: spot/types/enums.go
 
 DESCRIPTION:
-Closed enums (typed strings) used by the Bybit V5 spot category. Values
-match the wire format Bybit accepts and returns — keep them exact, or
-the exchange rejects with retCode 10001.
+Closed enums (typed strings) used by the Bybit V5 spot profile. Most
+values are PROTOCOL-COMMON and re-exported from the neutral
+`github.com/tonymontanov/go-bybit/v2/types` package via Go type
+aliases (`type X = commontypes.X`) — this preserves type identity, so
+`spot/types.SideTypeBuy` and `linears/types.SideTypeBuy` are the same
+type at the language level (both are `commontypes.SideType`).
 
-DIFFERENCES vs LINEARS:
-  - No `PositionIdx`, no `PositionMode` (spot has no positions).
-  - `MarginTrading` enum captures Bybit's instrument-level marginTrading
-    string ("none", "both", "utaOnly", "normalSpotOnly").
-  - All other enums (Side / OrderType / TimeInForce / OrderStatus /
-    Category) are byte-identical to linears so the two profiles speak
-    the same wire dialect.
+Spot-only enum declared HERE:
+  - MarginTrading — instrument-level margin-trading flag (Bybit's
+    `marginTrading` from /v5/market/instruments-info, values
+    "none" / "both" / "utaOnly" / "normalSpotOnly"). Linears does not
+    surface this field.
+
+Spot does NOT have positions, so `PositionIdx` / `PositionMode` from
+linears/types are intentionally not present here.
 */
 
 package types
 
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
+
 // Category is the Bybit V5 product family identifier. The spot
-// profile is hard-pinned to "spot" but the constant set is duplicated
-// here so call sites can stay package-local.
-type Category string
+// profile pins `spot`; the constant set is re-exported so call sites
+// can stay package-local.
+type Category = commontypes.Category
 
 const (
-	// CategoryLinear — USDT/USDC perpetual + USDC futures (declared for
-	// cross-reference; spot profile never uses it).
-	CategoryLinear Category = "linear"
+	// CategoryLinear — USDT/USDC perpetual + USDC futures (declared
+	// for cross-reference; spot profile never uses it).
+	CategoryLinear = commontypes.CategoryLinear
 	// CategorySpot — spot — the value the spot profile pins.
-	CategorySpot Category = "spot"
+	CategorySpot = commontypes.CategorySpot
 	// CategoryInverse — coin-margined contracts.
-	CategoryInverse Category = "inverse"
+	CategoryInverse = commontypes.CategoryInverse
 	// CategoryOption — options.
-	CategoryOption Category = "option"
+	CategoryOption = commontypes.CategoryOption
 )
 
 // SideType — order direction on the exchange wire.
-type SideType string
+type SideType = commontypes.SideType
 
 const (
 	// SideTypeBuy — buy.
-	SideTypeBuy SideType = "Buy"
+	SideTypeBuy = commontypes.SideTypeBuy
 	// SideTypeSell — sell.
-	SideTypeSell SideType = "Sell"
+	SideTypeSell = commontypes.SideTypeSell
 )
 
 // OrderType — order execution model on the exchange wire.
-type OrderType string
+type OrderType = commontypes.OrderType
 
 const (
 	// OrderTypeLimit — limit order.
-	OrderTypeLimit OrderType = "Limit"
+	OrderTypeLimit = commontypes.OrderTypeLimit
 	// OrderTypeMarket — market order.
-	OrderTypeMarket OrderType = "Market"
+	OrderTypeMarket = commontypes.OrderTypeMarket
 )
 
-// TimeInForceType — order expiry / queue behaviour. The PostOnly variant
-// is recognised by Bybit V5 only when paired with orderType=Limit; the
-// SDK applies that mapping in trading.go.
-type TimeInForceType string
+// TimeInForceType — order expiry / queue behaviour.
+type TimeInForceType = commontypes.TimeInForceType
 
 const (
 	// TimeInForceGTC — Good Till Cancel (default).
-	TimeInForceGTC TimeInForceType = "GTC"
+	TimeInForceGTC = commontypes.TimeInForceGTC
 	// TimeInForceIOC — Immediate or Cancel.
-	TimeInForceIOC TimeInForceType = "IOC"
+	TimeInForceIOC = commontypes.TimeInForceIOC
 	// TimeInForceFOK — Fill or Kill.
-	TimeInForceFOK TimeInForceType = "FOK"
+	TimeInForceFOK = commontypes.TimeInForceFOK
 	// TimeInForcePostOnly — post-only (rejected if it would cross the
 	// book). Maps to orderType=Limit + timeInForce=PostOnly on the wire.
-	TimeInForcePostOnly TimeInForceType = "PostOnly"
+	TimeInForcePostOnly = commontypes.TimeInForcePostOnly
 )
 
-// OrderStatus is a subset of the Bybit V5 spot order states. Bybit
-// occasionally extends the catalogue; values outside this list are
-// returned verbatim in OrderInfo.Status — callers that need finer
-// discrimination should read the raw status string.
-type OrderStatus string
+// OrderStatus — Bybit V5 spot order state. Re-exports the common
+// base catalogue; the trigger-order specific values
+// (Untriggered / Triggered) are not applicable to spot and are NOT
+// declared here.
+//
+// Bybit occasionally extends the catalogue; values outside this list
+// are returned verbatim in OrderInfo.Status.
+type OrderStatus = commontypes.OrderStatus
 
 const (
-	OrderStatusNew             OrderStatus = "New"
-	OrderStatusPartiallyFilled OrderStatus = "PartiallyFilled"
-	OrderStatusFilled          OrderStatus = "Filled"
-	OrderStatusCancelled       OrderStatus = "Cancelled"
-	OrderStatusRejected        OrderStatus = "Rejected"
+	// OrderStatusNew — accepted by the matcher, untriggered.
+	OrderStatusNew = commontypes.OrderStatusNew
+	// OrderStatusPartiallyFilled — partially filled, remainder live.
+	OrderStatusPartiallyFilled = commontypes.OrderStatusPartiallyFilled
+	// OrderStatusFilled — fully filled.
+	OrderStatusFilled = commontypes.OrderStatusFilled
+	// OrderStatusCancelled — cancelled.
+	OrderStatusCancelled = commontypes.OrderStatusCancelled
+	// OrderStatusRejected — rejected by the exchange before reaching the book.
+	OrderStatusRejected = commontypes.OrderStatusRejected
 )
 
 // MarginTrading describes whether a spot symbol can be margin-traded
 // and on which account type. Comes from instruments-info.marginTrading.
+//
+// SPOT-ONLY: the linears profile does not surface this field.
 //
 // Spot trading on Bybit V5 supports two account models:
 //

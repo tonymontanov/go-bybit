@@ -2,25 +2,17 @@
 FILE: spot/types/order-book-snapshot.go
 
 DESCRIPTION:
-Order book snapshot for the Bybit V5 spot category. Wire shape and
-synchronisation model are identical to linear: each push carries a "u"
-sequence and snapshots include a "seq" symbol-wide counter; gap
-detection is purely sequence-based (no CRC32).
-
-The struct is duplicated from linears/types rather than imported,
-because spot consumers should not pick up an implicit dependency on
-linears/types. Keeping the two profile packages decoupled simplifies
-versioning when one profile evolves faster than the other.
+Type alias re-export of the protocol-common
+`github.com/tonymontanov/go-bybit/v2/types.OrderBookSnapshot`. Wire
+shape and synchronisation model are identical for every Bybit V5
+category. The alias preserves type identity — existing code that
+addresses `spot/types.OrderBookSnapshot` continues to compile
+unchanged.
 */
 
 package types
 
-// OrderBookSnapshot — order book snapshot for a single symbol.
-type OrderBookSnapshot struct {
-	Symbol   string
-	Bids     []OrderBookLevel
-	Asks     []OrderBookLevel
-	UpdateID int64
-	SeqID    int64
-	TsMs     int64
-}
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
+
+// OrderBookSnapshot — order book snapshot. See commontypes.OrderBookSnapshot.
+type OrderBookSnapshot = commontypes.OrderBookSnapshot

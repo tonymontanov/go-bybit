@@ -2,47 +2,44 @@
 FILE: linears/types/timeframe.go
 
 DESCRIPTION:
-Bybit V5 kline `interval` enum. Bybit treats minute-based intervals as
-plain integer strings ("1", "3", "5", ...), and uses single uppercase
-letters for daily and above. The Wire() method returns the exact value
-the GET /v5/market/kline endpoint expects.
+Type alias re-export of the protocol-common
+`github.com/tonymontanov/go-bybit/v2/types.Timeframe`. Bybit V5 kline
+intervals are the same across every category, so the linears profile
+reuses the common type.
 */
 
 package types
 
-// Timeframe is a closed enum of kline intervals supported by Bybit V5.
-type Timeframe string
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
+
+// Timeframe — Bybit V5 kline interval. See commontypes.Timeframe.
+type Timeframe = commontypes.Timeframe
 
 const (
 	// Timeframe1m — 1 minute.
-	Timeframe1m Timeframe = "1"
+	Timeframe1m = commontypes.Timeframe1m
 	// Timeframe3m — 3 minutes.
-	Timeframe3m Timeframe = "3"
+	Timeframe3m = commontypes.Timeframe3m
 	// Timeframe5m — 5 minutes.
-	Timeframe5m Timeframe = "5"
+	Timeframe5m = commontypes.Timeframe5m
 	// Timeframe15m — 15 minutes.
-	Timeframe15m Timeframe = "15"
+	Timeframe15m = commontypes.Timeframe15m
 	// Timeframe30m — 30 minutes.
-	Timeframe30m Timeframe = "30"
+	Timeframe30m = commontypes.Timeframe30m
 	// Timeframe1h — 1 hour.
-	Timeframe1h Timeframe = "60"
+	Timeframe1h = commontypes.Timeframe1h
 	// Timeframe2h — 2 hours.
-	Timeframe2h Timeframe = "120"
+	Timeframe2h = commontypes.Timeframe2h
 	// Timeframe4h — 4 hours.
-	Timeframe4h Timeframe = "240"
+	Timeframe4h = commontypes.Timeframe4h
 	// Timeframe6h — 6 hours.
-	Timeframe6h Timeframe = "360"
+	Timeframe6h = commontypes.Timeframe6h
 	// Timeframe12h — 12 hours.
-	Timeframe12h Timeframe = "720"
+	Timeframe12h = commontypes.Timeframe12h
 	// Timeframe1d — 1 day.
-	Timeframe1d Timeframe = "D"
+	Timeframe1d = commontypes.Timeframe1d
 	// Timeframe1w — 1 week.
-	Timeframe1w Timeframe = "W"
+	Timeframe1w = commontypes.Timeframe1w
 	// Timeframe1M — 1 month.
-	Timeframe1M Timeframe = "M"
+	Timeframe1M = commontypes.Timeframe1M
 )
-
-// Wire returns the Bybit V5 string representation of the timeframe.
-func (t Timeframe) Wire() string {
-	return string(t)
-}
