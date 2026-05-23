@@ -20,42 +20,24 @@ package linears
 
 import (
 	"github.com/shopspring/decimal"
-	"github.com/tonymontanov/go-bybit/internal/codec"
+
+	"github.com/tonymontanov/go-bybit/internal/v5common"
 )
 
-// dec parses s into decimal.Decimal; returns Zero on empty/invalid input.
+// dec is a thin alias over v5common.Dec, retained because the rest of
+// this profile uses lowercase, single-letter helpers and switching the
+// existing call sites (~150 occurrences) to v5common.Dec would make
+// review noisy without a behaviour change.
 func dec(s string) decimal.Decimal {
-	var v decimal.Decimal
-	var err error
-	v, err = codec.ParseDecimal(s)
-	if err != nil {
-		return decimal.Zero
-	}
-	return v
+	return v5common.Dec(s)
 }
 
-// ms parses s into an int64 (used for ms timestamps); 0 on empty/invalid.
+// ms is a thin alias over v5common.Ms (see `dec` rationale).
 func ms(s string) int64 {
-	var n int64
-	var err error
-	n, err = codec.ParseInt64(s)
-	if err != nil {
-		return 0
-	}
-	return n
+	return v5common.Ms(s)
 }
 
-// normalizeRejectReason maps Bybit V5's "no rejection" sentinel
-// "EC_NoError" to an empty string so OrderInfo.RejectReason is empty
-// when the order was NOT rejected. Bybit ships "EC_NoError" on every
-// non-rejected order in REST and WS payloads — surfacing it verbatim
-// confuses downstream consumers that branch on `RejectReason != ""`.
-//
-// Other reason codes (e.g. "EC_PostOnlyWillTakeLiquidity") are
-// returned unchanged.
+// normalizeRejectReason is a thin alias over v5common.NormalizeRejectReason.
 func normalizeRejectReason(s string) string {
-	if s == "EC_NoError" {
-		return ""
-	}
-	return s
+	return v5common.NormalizeRejectReason(s)
 }

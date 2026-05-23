@@ -5,7 +5,91 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
-(no changes since v1.0.0)
+(no changes since v2.0.0)
+
+## [v2.0.0] — 2026-05-23
+
+Adds first-class **spot** category support and reorganises a small slice
+of internals so the new profile and the existing `linears/` package can
+share low-level helpers without breaking each other.
+
+The `linears/` public surface is unchanged — code that depends on
+`v1.0.0` keeps compiling against `v2.0.0` byte-for-byte. The major bump
+is driven by the new `internal/v5common` package (an internal API that
+nevertheless changes the import graph), the `spot/` package becoming a
+public API, and the `orderbook/` engine now exposing its own `Level`
+type instead of `linears/types.OrderBookLevel` (callers using the engine
+directly need a one-line conversion; callers using `linears.Stream` are
+unaffected).
+
+### Added
+
+- **`spot/` profile** (Bybit V5 spot category).
+  - REST: `Trading.{CreateOrder, ModifyOrder, CancelOrder, CreateBatchOrders,
+    ModifyBatchOrders, CancelBatchOrders, CancelAllOrders, CancelForgottenOrders}`,
+    `Account.{GetWalletBalance, GetOpenOrders}`,
+    `MarketData.{GetSymbolInfo, GetOrderBook, GetHistoricalCandles}`.
+  - Spot batch endpoints are UTA-only on Bybit; the SDK enforces
+    `MaxBatchSize=10` (vs. 20 on linears) and surfaces idempotent
+    "order not modified" / "leverage not modified" responses as
+    successful no-ops, mirroring linears behaviour.
+  - WebSocket: `Stream.{WatchOrderBook, WatchTicker, WatchTrades,
+    WatchKline}` (public) and `Stream.{WatchOrders, WatchExecutions,
+    WatchWallet}` (private; UTA-only on the wire). Public stream uses
+    a dedicated spot WS endpoint (`Config.WS.PublicSpotURL`); the
+    private endpoint is shared with linears per UID.
+  - `spot/types/`: `SymbolInfo` exposes `MarginTrading` /
+    `Innovation` / `BasePrecision` / `MinOrderAmt` / `MaxOrderAmt`;
+    `OrderInfo` exposes `MarketUnit` / `IsLeverage`; `TickerUpdate`
+    exposes `UsdIndexPrice` (no MarkPrice / FundingRate / OpenInterest
+    on spot).
+  - Hard-pinned `category=spot` on every REST call; the spot package
+    is decoupled from `linears/types` to keep versioning independent.
+- **Examples**: `examples/spot-{market-data, orderbook-watcher,
+  public-streams, account-info, simple-trade, inventory-monitor}`,
+  mirroring the linears examples one-for-one. `exhelp.NewSpotClient`
+  helper added so each example stays a few lines of demonstration
+  code.
+
+### Changed
+
+- **`internal/v5common/`** (new internal package). Houses numeric
+  parsing (`Dec` / `Ms`), V5 reject-reason normalisation, the
+  generic `ConvertOrderBookLevels[T]` helper, and the orderbook
+  depth clamp. Both `linears/` and `spot/` route through it; per-
+  profile thin aliases (`linears.dec`, `spot.dec`, etc.) preserve
+  the existing call sites.
+- **`orderbook/` engine** is no longer typed against
+  `linears/types.OrderBookLevel`. `orderbook.Snapshot` and
+  `orderbook.Delta` now use the in-package `orderbook.Level` struct.
+  `linears/` and `spot/` ship a tiny conversion layer at the
+  package boundary so callers using `Stream.WatchOrderBook` see
+  no change. Callers driving the engine directly need to map
+  between `orderbook.Level` and their own profile-specific level
+  type — typically a single `for { … }` loop.
+- **Root client** gains `RegisterSpotFactory` /
+  `Client.Spot()` plumbing symmetric to `Linears()`. Importing the
+  `spot` package (or any example that does) is what wires the
+  factory; the root client remains free of an explicit `spot`
+  import to avoid an import cycle.
+
+### Tests
+
+- Full contract suite for `spot/` against `httptest`: instrument
+  parsing (Innovation / MarginTrading), depth clamping, paginated
+  `GetOpenOrders`, `CreateOrder` happy + Rejected paths, idempotent
+  vs. propagated `ModifyOrder` retCodes (10001 vs. 110001),
+  `CancelAllOrders`, `CreateBatchOrders` partial-failure shapes.
+- Validation suite covers all `build*Body` paths, the orderLinkID
+  pattern, the batch-error filter and the depth clamp.
+
+### Notes
+
+- `linears/` users do not need to change anything to upgrade to
+  `v2.0.0`. Direct users of the orderbook engine update their level
+  type in one place.
+- Spot rate-limit budgets are intentionally NOT bundled with the SDK;
+  the connector layer in the consuming application owns them.
 
 ## [v1.0.0] — 2026-05-23
 
@@ -133,7 +217,8 @@ profiles are out of scope for v1.
 - `spot/` profile is reserved for a future milestone (`M5+`).
 
 [Semantic Versioning]: https://semver.org
-[Unreleased]: https://github.com/tonymontanov/go-bybit/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/tonymontanov/go-bybit/compare/v2.0.0...HEAD
+[v2.0.0]: https://github.com/tonymontanov/go-bybit/releases/tag/v2.0.0
 [v1.0.0]: https://github.com/tonymontanov/go-bybit/releases/tag/v1.0.0
 [v1.0.0-alpha.1]: https://github.com/tonymontanov/go-bybit/releases/tag/v1.0.0-alpha.1
 [v1.0.0-alpha.0]: https://github.com/tonymontanov/go-bybit/releases/tag/v1.0.0-alpha.0

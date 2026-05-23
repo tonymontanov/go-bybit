@@ -5,13 +5,12 @@ HFT / algorithmic trading.
 
 Module path: `github.com/tonymontanov/go-bybit`
 
-Latest stable: **v1.0.0** — see [CHANGELOG.md](CHANGELOG.md).
+Latest stable: **v2.0.0** — see [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
-`v1.0.0` covers the **linear** category (USDT-Margined Perpetuals)
-end-to-end. Inverse and option categories are out of scope; spot
-profile is planned for `v2.0.0` (see roadmap below).
+`v2.0.0` covers the **linear** and **spot** categories end-to-end.
+Inverse and option categories remain out of scope.
 
 | Module | Status | Notes |
 | --- | --- | --- |
@@ -25,7 +24,7 @@ profile is planned for `v2.0.0` (see roadmap below).
 | **M4** errors mapping + examples | done | extended `MapBybitCode` (10009/10017/10029/110003/110004/110009/110012/110020/110025/110052/170140) with table-driven tests; `examples/` for marketdata, signed trade, WS orderbook |
 | **M5** testnet / demo support | done | `Config.Testnet` / `Config.Demo` flags switch REST + WS hosts (`api-testnet.bybit.com` / `api-demo.bybit.com`, `stream-testnet.bybit.com` / `stream-demo.bybit.com`) |
 | **M6** `linears/types.SymbolInfo.MinPrice` / `.MaxPrice` | done in `v1.0.0-alpha.1` | parsed from `priceFilter.minPrice` / `priceFilter.maxPrice` |
-| **v2.0** `spot/` profile | planned | mirrors `linears/` with shared internal base; market-data + trading + account + streams |
+| **v2.0** `spot/` profile | done | Trading / Account / MarketData / Stream mirroring `linears/`; UTA-only batch + private streams; `internal/v5common` shared helpers; orderbook engine decoupled from profile types |
 | **v2.5** broader API coverage | planned | asset / referral / pre-market / broker / extra account endpoints |
 
 ## Quick start
@@ -58,8 +57,26 @@ _ = lc.Stream().WatchOrderBook(ctx, "BTCUSDT", 50, 5,
 )
 ```
 
-End-to-end runnable demos live under `examples/` (marketdata, trade,
-stream-orderbook).
+For the spot profile the entry point is symmetric:
+
+```go
+import (
+    bybit "github.com/tonymontanov/go-bybit"
+    "github.com/tonymontanov/go-bybit/spot"
+    spottypes "github.com/tonymontanov/go-bybit/spot/types"
+)
+
+sc := client.Spot().(*spot.Client)
+info, _ := sc.MarketData().GetSymbolInfo(ctx, "BTCUSDT")
+_ = sc.Stream().WatchOrderBook(ctx, "BTCUSDT", 50, 5,
+    func(ob spottypes.OrderBookSnapshot) { /* ... */ },
+    func(err error) { /* ... */ },
+)
+```
+
+End-to-end runnable demos live under `examples/` for both profiles
+(`market-data` / `spot-market-data`, `simple-trade` / `spot-simple-trade`,
+etc. — see `examples/README.md`).
 
 ## Dependencies
 
@@ -78,24 +95,33 @@ go-bybit/
   client.go / config.go / doc.go               # public root API
   errors.go / logger.go / metrics.go / rate-limit-event.go
   internal/
-    auth/    — HMAC-SHA256 signing for Bybit V5 REST + WS
-    bberr/   — Error type, ErrorKind, MapBybitCode / MapHTTPStatus
-    bblog/   — Logger interface + Field / NoopLogger
-    bbmet/   — Counter / CounterFactory + NoopMetrics
-    codec/   — jsoniter wrappers + ParseDecimal / ParseInt64 / RawJSON
-    rest/    — low-level HTTP client, V5 envelope { retCode, retMsg, result }
-    ws/      — Conn: connect / auth / app-ping / reconnect+jitter / resubscribe
-  linears/                # M1+
-  spot/                   # M5+
-  orderbook/              # M2+
+    auth/      — HMAC-SHA256 signing for Bybit V5 REST + WS
+    bberr/     — Error type, ErrorKind, MapBybitCode / MapHTTPStatus
+    bblog/     — Logger interface + Field / NoopLogger
+    bbmet/     — Counter / CounterFactory + NoopMetrics
+    codec/     — jsoniter wrappers + ParseDecimal / ParseInt64 / RawJSON
+    rest/      — low-level HTTP client, V5 envelope { retCode, retMsg, result }
+    v5common/  — Bybit V5 helpers shared by linears/ and spot/
+                 (numeric parsing, reject-reason normalisation,
+                 orderbook depth clamp, generic level conversion)
+    ws/        — Conn: connect / auth / app-ping / reconnect+jitter / resubscribe
+  linears/                # v1.0+ — USDT/USDC perps + USDC futures
+  spot/                   # v2.0+ — Bybit V5 spot category
+  orderbook/              # M2+ — profile-agnostic engine
   examples/               # runnable end-to-end demos (see examples/README.md)
-    market-data/          # public REST
-    orderbook-watcher/    # public WS engine-backed top-of-book
-    public-streams/       # WS multi-stream (orderbook+ticker+trades+kline)
-    account-info/         # private REST read-only
-    inventory-monitor/    # private WS long-running monitor
-    simple-trade/         # signed REST CRUD (PostOnly create→amend→cancel)
-    inventory-tracker/    # real market BUY → live streams → ClosePosition
+    market-data/          # public REST (linears)
+    orderbook-watcher/    # public WS engine-backed top-of-book (linears)
+    public-streams/       # WS multi-stream (linears)
+    account-info/         # private REST read-only (linears)
+    inventory-monitor/    # private WS long-running monitor (linears)
+    simple-trade/         # signed REST CRUD (linears)
+    inventory-tracker/    # real market BUY → ClosePosition (linears)
+    spot-market-data/     # public REST (spot)
+    spot-orderbook-watcher/ # public WS engine-backed top-of-book (spot)
+    spot-public-streams/  # WS multi-stream (spot)
+    spot-account-info/    # private REST read-only (spot)
+    spot-inventory-monitor/ # private WS long-running monitor (spot)
+    spot-simple-trade/    # signed REST CRUD (spot)
     internal/exhelp/      # shared env loader + error formatter
   scripts/run.sh          # loads .env and forwards to `go run`
 ```
