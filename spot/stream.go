@@ -39,11 +39,11 @@ import (
 	"context"
 	"strconv"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/internal/codec"
-	"github.com/tonymontanov/go-bybit/internal/ws"
-	"github.com/tonymontanov/go-bybit/orderbook"
-	bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/internal/codec"
+	"github.com/tonymontanov/go-bybit/v2/internal/ws"
+	"github.com/tonymontanov/go-bybit/v2/orderbook"
+	bybitspottypes "github.com/tonymontanov/go-bybit/v2/spot/types"
 )
 
 // StreamClient — WebSocket subscription sub-client for the spot profile.

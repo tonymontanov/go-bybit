@@ -26,9 +26,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tonymontanov/go-bybit/examples/internal/exhelp"
-	"github.com/tonymontanov/go-bybit/linears"
-	"github.com/tonymontanov/go-bybit/linears/types"
+	"github.com/tonymontanov/go-bybit/v2/examples/internal/exhelp"
+	"github.com/tonymontanov/go-bybit/v2/linears"
+	"github.com/tonymontanov/go-bybit/v2/linears/types"
 )
 
 func main() {

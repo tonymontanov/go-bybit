@@ -25,8 +25,8 @@ package spot
 import (
 	"sync"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/internal/ws"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/internal/ws"
 )
 
 // Client — Bybit V5 spot profile client.

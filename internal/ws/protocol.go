@@ -32,7 +32,7 @@ populated.
 
 package ws
 
-import "github.com/tonymontanov/go-bybit/internal/codec"
+import "github.com/tonymontanov/go-bybit/v2/internal/codec"
 
 // OutboundOp is the JSON payload for a control frame we send to Bybit.
 type OutboundOp struct {

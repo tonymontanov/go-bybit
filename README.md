@@ -3,7 +3,7 @@
 High-performance Go SDK for the **Bybit V5** exchange API, targeting
 HFT / algorithmic trading.
 
-Module path: `github.com/tonymontanov/go-bybit`
+Module path: `github.com/tonymontanov/go-bybit/v2`
 
 Latest stable: **v2.0.0** — see [CHANGELOG.md](CHANGELOG.md).
 
@@ -31,9 +31,9 @@ Inverse and option categories remain out of scope.
 
 ```go
 import (
-    bybit "github.com/tonymontanov/go-bybit"
-    "github.com/tonymontanov/go-bybit/linears"
-    "github.com/tonymontanov/go-bybit/linears/types"
+    bybit "github.com/tonymontanov/go-bybit/v2"
+    "github.com/tonymontanov/go-bybit/v2/linears"
+    "github.com/tonymontanov/go-bybit/v2/linears/types"
 )
 
 cfg := bybit.DefaultConfig()
@@ -61,9 +61,9 @@ For the spot profile the entry point is symmetric:
 
 ```go
 import (
-    bybit "github.com/tonymontanov/go-bybit"
-    "github.com/tonymontanov/go-bybit/spot"
-    spottypes "github.com/tonymontanov/go-bybit/spot/types"
+    bybit "github.com/tonymontanov/go-bybit/v2"
+    "github.com/tonymontanov/go-bybit/v2/spot"
+    spottypes "github.com/tonymontanov/go-bybit/v2/spot/types"
 )
 
 sc := client.Spot().(*spot.Client)

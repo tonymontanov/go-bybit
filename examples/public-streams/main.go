@@ -30,8 +30,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/tonymontanov/go-bybit/examples/internal/exhelp"
-	"github.com/tonymontanov/go-bybit/linears/types"
+	"github.com/tonymontanov/go-bybit/v2/examples/internal/exhelp"
+	"github.com/tonymontanov/go-bybit/v2/linears/types"
 )
 
 // snapshot — current values updated from different channels. Each field

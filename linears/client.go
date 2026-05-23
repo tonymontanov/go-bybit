@@ -24,8 +24,8 @@ package linears
 import (
 	"sync"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/internal/ws"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/internal/ws"
 )
 
 // Client — Bybit V5 linears profile client.
@@ -131,7 +131,7 @@ func toWsConfig(cfg bybit.Config, url string, private bool) ws.Config {
 // init registers the factory in the root package so that bybit.Client.
 // Linears() lazily returns *linears.Client. This allows users to avoid
 // an explicit linears import when working only through the root Client
-// (a blank-import of "github.com/tonymontanov/go-bybit/linears" is still
+// (a blank-import of "github.com/tonymontanov/go-bybit/v2/linears" is still
 // required in that case).
 func init() {
 	bybit.RegisterLinearsFactory(func(parent *bybit.Client) any {

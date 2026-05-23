@@ -19,7 +19,7 @@ USAGE:
 	defer c.Close()
 
 	// Once the linears package is imported (anonymously is fine):
-	//   import _ "github.com/tonymontanov/go-bybit/linears"
+	//   import _ "github.com/tonymontanov/go-bybit/v2/linears"
 	var linearsClient = c.Linears().(*linears.Client)
 
 The .(*linears.Client) cast is by design: the root package returns `any`
@@ -33,9 +33,9 @@ package bybit
 import (
 	"sync"
 
-	"github.com/tonymontanov/go-bybit/internal/auth"
-	"github.com/tonymontanov/go-bybit/internal/bberr"
-	"github.com/tonymontanov/go-bybit/internal/rest"
+	"github.com/tonymontanov/go-bybit/v2/internal/auth"
+	"github.com/tonymontanov/go-bybit/v2/internal/bberr"
+	"github.com/tonymontanov/go-bybit/v2/internal/rest"
 )
 
 // Client is the root SDK object. Safe for concurrent use; methods on Client
@@ -148,7 +148,7 @@ func RegisterLinearsFactory(f func(c *Client) any) {
 func (c *Client) Linears() any {
 	c.linearsOnce.Do(func() {
 		if linearsFactory == nil {
-			c.logger.Warn(`bybit.Client.Linears: linears factory is not registered; import _ "github.com/tonymontanov/go-bybit/linears"`)
+			c.logger.Warn(`bybit.Client.Linears: linears factory is not registered; import _ "github.com/tonymontanov/go-bybit/v2/linears"`)
 			return
 		}
 		c.linearsVal = linearsFactory(c)
@@ -171,7 +171,7 @@ func RegisterSpotFactory(f func(c *Client) any) {
 func (c *Client) Spot() any {
 	c.spotOnce.Do(func() {
 		if spotFactory == nil {
-			c.logger.Warn(`bybit.Client.Spot: spot factory is not registered; import _ "github.com/tonymontanov/go-bybit/spot"`)
+			c.logger.Warn(`bybit.Client.Spot: spot factory is not registered; import _ "github.com/tonymontanov/go-bybit/v2/spot"`)
 			return
 		}
 		c.spotVal = spotFactory(c)

@@ -27,9 +27,9 @@ import (
 	"strconv"
 
 	"github.com/shopspring/decimal"
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/linears"
-	"github.com/tonymontanov/go-bybit/spot"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/linears"
+	"github.com/tonymontanov/go-bybit/v2/spot"
 )
 
 // Options — flat input for NewClient. The fields mirror the public

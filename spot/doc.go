@@ -6,8 +6,8 @@ over the V5 REST and WebSocket transports provided by the root SDK.
 USAGE:
 
 	import (
-		bybit "github.com/tonymontanov/go-bybit"
-		"github.com/tonymontanov/go-bybit/spot"
+		bybit "github.com/tonymontanov/go-bybit/v2"
+		"github.com/tonymontanov/go-bybit/v2/spot"
 	)
 
 	var cfg = bybit.DefaultConfig()

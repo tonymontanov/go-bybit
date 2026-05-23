@@ -46,11 +46,11 @@ import (
 	"context"
 	"strconv"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/internal/codec"
-	"github.com/tonymontanov/go-bybit/internal/ws"
-	"github.com/tonymontanov/go-bybit/linears/types"
-	"github.com/tonymontanov/go-bybit/orderbook"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/internal/codec"
+	"github.com/tonymontanov/go-bybit/v2/internal/ws"
+	"github.com/tonymontanov/go-bybit/v2/linears/types"
+	"github.com/tonymontanov/go-bybit/v2/orderbook"
 )
 
 // StreamClient — WebSocket subscription sub-client for the linear profile.

@@ -21,7 +21,7 @@ package linears
 import (
 	"github.com/shopspring/decimal"
 
-	"github.com/tonymontanov/go-bybit/internal/v5common"
+	"github.com/tonymontanov/go-bybit/v2/internal/v5common"
 )
 
 // dec is a thin alias over v5common.Dec, retained because the rest of

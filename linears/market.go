@@ -32,10 +32,10 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/internal/rest"
-	"github.com/tonymontanov/go-bybit/internal/v5common"
-	"github.com/tonymontanov/go-bybit/linears/types"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/internal/rest"
+	"github.com/tonymontanov/go-bybit/v2/internal/v5common"
+	"github.com/tonymontanov/go-bybit/v2/linears/types"
 )
 
 // MarketDataClient — public market-data sub-client.

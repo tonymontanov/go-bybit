@@ -18,7 +18,7 @@ package spot
 import (
 	"context"
 
-	"github.com/tonymontanov/go-bybit/internal/rest"
+	"github.com/tonymontanov/go-bybit/v2/internal/rest"
 )
 
 // restDoer — minimal REST transport contract.

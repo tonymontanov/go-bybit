@@ -5,7 +5,7 @@ DESCRIPTION:
 Public re-export of the SDK error type and category predicates from
 internal/bberr. Importers work through the root package only:
 
-	import bybit "github.com/tonymontanov/go-bybit"
+	import bybit "github.com/tonymontanov/go-bybit/v2"
 
 	if bybit.IsRateLimit(err) { ... }
 
@@ -15,7 +15,7 @@ so users can also do `errors.As(err, &bybit.Error{})`.
 
 package bybit
 
-import "github.com/tonymontanov/go-bybit/internal/bberr"
+import "github.com/tonymontanov/go-bybit/v2/internal/bberr"
 
 // Error is the SDK error type (alias). All SDK methods return *Error
 // (sometimes wrapped). errors.As / errors.Is work normally.

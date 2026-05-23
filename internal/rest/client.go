@@ -42,10 +42,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tonymontanov/go-bybit/internal/auth"
-	"github.com/tonymontanov/go-bybit/internal/bberr"
-	"github.com/tonymontanov/go-bybit/internal/bblog"
-	"github.com/tonymontanov/go-bybit/internal/codec"
+	"github.com/tonymontanov/go-bybit/v2/internal/auth"
+	"github.com/tonymontanov/go-bybit/v2/internal/bberr"
+	"github.com/tonymontanov/go-bybit/v2/internal/bblog"
+	"github.com/tonymontanov/go-bybit/v2/internal/codec"
 )
 
 // Config — REST transport parameters. Populated from public Config.REST in

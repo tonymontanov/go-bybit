@@ -66,11 +66,11 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/tonymontanov/go-bybit/internal/auth"
-	"github.com/tonymontanov/go-bybit/internal/bberr"
-	"github.com/tonymontanov/go-bybit/internal/bblog"
-	"github.com/tonymontanov/go-bybit/internal/bbmet"
-	"github.com/tonymontanov/go-bybit/internal/codec"
+	"github.com/tonymontanov/go-bybit/v2/internal/auth"
+	"github.com/tonymontanov/go-bybit/v2/internal/bberr"
+	"github.com/tonymontanov/go-bybit/v2/internal/bblog"
+	"github.com/tonymontanov/go-bybit/v2/internal/bbmet"
+	"github.com/tonymontanov/go-bybit/v2/internal/codec"
 )
 
 // ErrConnClosed is returned by operations performed on a closed Conn.

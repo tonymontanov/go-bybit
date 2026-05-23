@@ -33,8 +33,8 @@ import (
 	"testing"
 	"time"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/linears/types"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/linears/types"
 )
 
 // mockBybit starts an httptest.Server that routes requests by path to a

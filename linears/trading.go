@@ -50,10 +50,10 @@ import (
 	"sync"
 	"time"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/internal/codec"
-	"github.com/tonymontanov/go-bybit/internal/rest"
-	"github.com/tonymontanov/go-bybit/linears/types"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/internal/codec"
+	"github.com/tonymontanov/go-bybit/v2/internal/rest"
+	"github.com/tonymontanov/go-bybit/v2/linears/types"
 )
 
 // MaxBatchSize — Bybit V5 limit on batch trade endpoints for the linear

@@ -19,7 +19,7 @@ package spot
 import (
 	"github.com/shopspring/decimal"
 
-	"github.com/tonymontanov/go-bybit/internal/v5common"
+	"github.com/tonymontanov/go-bybit/v2/internal/v5common"
 )
 
 // dec parses s into decimal.Decimal; Zero on empty / invalid input.

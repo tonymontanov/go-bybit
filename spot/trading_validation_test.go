@@ -28,8 +28,8 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	bybitspottypes "github.com/tonymontanov/go-bybit/v2/spot/types"
 )
 
 func dq(s string) decimal.Decimal {

@@ -3,7 +3,7 @@ Package types contains the domain structs used by the spot profile of
 the Bybit V5 SDK.
 
 DESIGN MIRROR: it is intentionally separated from the spot package so
-that callers can `import bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"`
+that callers can `import bybitspottypes "github.com/tonymontanov/go-bybit/v2/spot/types"`
 without dragging the implementation. The structure parallels
 `linears/types` but with spot-specific differences:
 

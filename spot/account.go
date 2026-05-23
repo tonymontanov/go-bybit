@@ -28,9 +28,9 @@ import (
 	"net/url"
 	"strconv"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/internal/rest"
-	bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/internal/rest"
+	bybitspottypes "github.com/tonymontanov/go-bybit/v2/spot/types"
 )
 
 // AccountClient — authenticated spot account sub-client.

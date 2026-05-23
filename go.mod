@@ -1,4 +1,4 @@
-module github.com/tonymontanov/go-bybit
+module github.com/tonymontanov/go-bybit/v2
 
 go 1.24
 

@@ -37,8 +37,8 @@ import (
 	"testing"
 	"time"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	bybitspottypes "github.com/tonymontanov/go-bybit/v2/spot/types"
 )
 
 // mockBybit starts an httptest.Server that routes requests by path to a

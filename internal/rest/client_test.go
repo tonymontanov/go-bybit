@@ -27,8 +27,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tonymontanov/go-bybit/internal/auth"
-	"github.com/tonymontanov/go-bybit/internal/bberr"
+	"github.com/tonymontanov/go-bybit/v2/internal/auth"
+	"github.com/tonymontanov/go-bybit/v2/internal/bberr"
 )
 
 // newTestClient wires up a Client pointing at the given test server.

@@ -25,10 +25,10 @@ package spot
 import (
 	"context"
 
-	bybit "github.com/tonymontanov/go-bybit"
-	"github.com/tonymontanov/go-bybit/internal/codec"
-	"github.com/tonymontanov/go-bybit/internal/ws"
-	bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"
+	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/internal/codec"
+	"github.com/tonymontanov/go-bybit/v2/internal/ws"
+	bybitspottypes "github.com/tonymontanov/go-bybit/v2/spot/types"
 )
 
 // =====================================================================

@@ -36,8 +36,8 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/tonymontanov/go-bybit/examples/internal/exhelp"
-	bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"
+	"github.com/tonymontanov/go-bybit/v2/examples/internal/exhelp"
+	bybitspottypes "github.com/tonymontanov/go-bybit/v2/spot/types"
 )
 
 func main() {

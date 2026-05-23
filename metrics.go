@@ -20,7 +20,7 @@ STABLE COUNTER NAMES (the SDK contract — see README):
 
 package bybit
 
-import "github.com/tonymontanov/go-bybit/internal/bbmet"
+import "github.com/tonymontanov/go-bybit/v2/internal/bbmet"
 
 // Counter is a monotonically increasing metric.
 type Counter = bbmet.Counter

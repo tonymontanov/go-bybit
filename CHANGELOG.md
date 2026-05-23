@@ -3,6 +3,12 @@
 All notable changes to `github.com/tonymontanov/go-bybit` will be
 documented in this file. The project follows [Semantic Versioning].
 
+> **Module path note (v2.0.0+):** Per Go's
+> [SIV rule](https://go.dev/ref/mod#major-version-suffixes), majors ≥ 2
+> live under a `/v2` import path:
+> `github.com/tonymontanov/go-bybit/v2`. v1.x stays importable at the
+> unsuffixed path. The two majors can coexist in a single binary.
+
 ## [Unreleased]
 
 (no changes since v2.0.0)
@@ -13,14 +19,26 @@ Adds first-class **spot** category support and reorganises a small slice
 of internals so the new profile and the existing `linears/` package can
 share low-level helpers without breaking each other.
 
-The `linears/` public surface is unchanged — code that depends on
-`v1.0.0` keeps compiling against `v2.0.0` byte-for-byte. The major bump
-is driven by the new `internal/v5common` package (an internal API that
-nevertheless changes the import graph), the `spot/` package becoming a
-public API, and the `orderbook/` engine now exposing its own `Level`
-type instead of `linears/types.OrderBookLevel` (callers using the engine
-directly need a one-line conversion; callers using `linears.Stream` are
-unaffected).
+### Module path
+
+Per Go's semantic-import-versioning rule, the module path moves to
+`github.com/tonymontanov/go-bybit/v2`. Update consumers with:
+
+```bash
+go get github.com/tonymontanov/go-bybit/v2@v2.0.0
+```
+
+and rewrite imports `github.com/tonymontanov/go-bybit{,/<sub>}` →
+`github.com/tonymontanov/go-bybit/v2{,/<sub>}`. The `linears/` public
+type/method surface is otherwise byte-identical to v1.0.0; the rename
+is mechanical (`gofmt -r 'a -> b'` works).
+
+The major bump is driven by the import-path move, the new
+`internal/v5common` package (changes the import graph), the `spot/`
+package becoming a public API, and the `orderbook/` engine now exposing
+its own `Level` type instead of `linears/types.OrderBookLevel` (callers
+using the engine directly need a one-line conversion; callers using
+`linears.Stream` are unaffected).
 
 ### Added
 

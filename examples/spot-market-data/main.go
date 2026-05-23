@@ -30,9 +30,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tonymontanov/go-bybit/examples/internal/exhelp"
-	"github.com/tonymontanov/go-bybit/spot"
-	bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"
+	"github.com/tonymontanov/go-bybit/v2/examples/internal/exhelp"
+	"github.com/tonymontanov/go-bybit/v2/spot"
+	bybitspottypes "github.com/tonymontanov/go-bybit/v2/spot/types"
 )
 
 func main() {

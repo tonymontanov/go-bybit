@@ -30,15 +30,15 @@ exponential backoff + jitter, re-authenticate, and re-subscribe
 transparently. The application-level keep-alive ({"op":"ping"} every
 20s) is built in; users do not interact with it.
 
-The SDK module path is github.com/tonymontanov/go-bybit. Versioning
+The SDK module path is github.com/tonymontanov/go-bybit/v2. Versioning
 follows semver starting at v1.0.0.
 
 Quick start:
 
 	import (
-	    bybit "github.com/tonymontanov/go-bybit"
-	    "github.com/tonymontanov/go-bybit/linears"
-	    "github.com/tonymontanov/go-bybit/linears/types"
+	    bybit "github.com/tonymontanov/go-bybit/v2"
+	    "github.com/tonymontanov/go-bybit/v2/linears"
+	    "github.com/tonymontanov/go-bybit/v2/linears/types"
 	)
 
 	func main() {

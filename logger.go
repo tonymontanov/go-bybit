@@ -14,7 +14,7 @@ once and pass it via Config.Logger.
 
 package bybit
 
-import "github.com/tonymontanov/go-bybit/internal/bblog"
+import "github.com/tonymontanov/go-bybit/v2/internal/bblog"
 
 // Logger is the SDK logging facade. See internal/bblog for the full contract.
 type Logger = bblog.Logger

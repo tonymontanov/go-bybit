@@ -18,7 +18,7 @@ package v5common
 import (
 	"github.com/shopspring/decimal"
 
-	"github.com/tonymontanov/go-bybit/internal/codec"
+	"github.com/tonymontanov/go-bybit/v2/internal/codec"
 )
 
 // Dec parses s into a decimal.Decimal; returns Zero on empty or
