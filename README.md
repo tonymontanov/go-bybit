@@ -5,7 +5,13 @@ HFT / algorithmic trading.
 
 Module path: `github.com/tonymontanov/go-bybit`
 
+Latest stable: **v1.0.0** — see [CHANGELOG.md](CHANGELOG.md).
+
 ## Status
+
+`v1.0.0` covers the **linear** category (USDT-Margined Perpetuals)
+end-to-end. Inverse and option categories are out of scope; spot
+profile is planned for `v2.0.0` (see roadmap below).
 
 | Module | Status | Notes |
 | --- | --- | --- |
@@ -17,11 +23,10 @@ Module path: `github.com/tonymontanov/go-bybit`
 | **M2** `orderbook/` engine (snapshot + delta + u/seq + resync) | done | sequence + service-restart gap detection (no CRC32 — Bybit does not ship one) |
 | **M3** `linears/stream.go` (WS subscriptions) | done | public: WatchOrderBook (engine-backed) / WatchTicker (delta merge) / WatchTrades / WatchKline; private: WatchOrders / WatchPositions / WatchExecutions / WatchWallet; mock-WS tests for all paths |
 | **M4** errors mapping + examples | done | extended `MapBybitCode` (10009/10017/10029/110003/110004/110009/110012/110020/110025/110052/170140) with table-driven tests; `examples/` for marketdata, signed trade, WS orderbook |
-| **M5** `spot/` profile | planned | mirrors `linears/` |
-| **MVP+** testnet / demo support | deferred | flags exist already in Config; URL switching is wired but not yet used in v1 |
-
-`v1` covers the **linear** category only. Inverse and option are out of
-scope for v1.
+| **M5** testnet / demo support | done | `Config.Testnet` / `Config.Demo` flags switch REST + WS hosts (`api-testnet.bybit.com` / `api-demo.bybit.com`, `stream-testnet.bybit.com` / `stream-demo.bybit.com`) |
+| **M6** `linears/types.SymbolInfo.MinPrice` / `.MaxPrice` | done in `v1.0.0-alpha.1` | parsed from `priceFilter.minPrice` / `priceFilter.maxPrice` |
+| **v2.0** `spot/` profile | planned | mirrors `linears/` with shared internal base; market-data + trading + account + streams |
+| **v2.5** broader API coverage | planned | asset / referral / pre-market / broker / extra account endpoints |
 
 ## Quick start
 

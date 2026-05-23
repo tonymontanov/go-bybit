@@ -5,6 +5,31 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
+(no changes since v1.0.0)
+
+## [v1.0.0] — 2026-05-23
+
+First **stable** release of the Bybit V5 Go SDK. Promotes the
+`v1.0.0-alpha.*` line to GA after a multi-day production soak with
+`market-making-desk-core` (Spread Quoter, Backrun Chase Order, Default
+templates) — see `bybit-linears-22.5.2026_02.log` and
+`bybit-linears-23.5.2026.log` for the qualifying runs.
+
+No public-API changes since `v1.0.0-alpha.1`; this is a stability
+checkpoint. Future SDK additions (spot profile, broader API coverage)
+will ship under `v2.0.0` / `v2.5.0` per the project roadmap.
+
+## [v1.0.0-alpha.1] — 2026-05-22
+
+### Added
+
+- `linears/types.SymbolInfo` now exposes `MinPrice` and `MaxPrice`
+  (`decimal.Decimal`) parsed from Bybit V5 `priceFilter.minPrice` /
+  `priceFilter.maxPrice`. Required by callers that must clamp client
+  prices into the exchange-allowed band before submitting an order.
+- Contract tests (`linears/contract_test.go::TestContract_GetSymbolInfo`)
+  assert the new fields are wired through end-to-end.
+
 ### Changed
 
 - `OrderInfo.RejectReason` is now normalized to an empty string when
@@ -108,5 +133,7 @@ profiles are out of scope for v1.
 - `spot/` profile is reserved for a future milestone (`M5+`).
 
 [Semantic Versioning]: https://semver.org
-[Unreleased]: https://github.com/tonymontanov/go-bybit/compare/v1.0.0-alpha.0...HEAD
+[Unreleased]: https://github.com/tonymontanov/go-bybit/compare/v1.0.0...HEAD
+[v1.0.0]: https://github.com/tonymontanov/go-bybit/releases/tag/v1.0.0
+[v1.0.0-alpha.1]: https://github.com/tonymontanov/go-bybit/releases/tag/v1.0.0-alpha.1
 [v1.0.0-alpha.0]: https://github.com/tonymontanov/go-bybit/releases/tag/v1.0.0-alpha.0
