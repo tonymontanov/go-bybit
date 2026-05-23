@@ -29,6 +29,7 @@ import (
 	"github.com/shopspring/decimal"
 	bybit "github.com/tonymontanov/go-bybit"
 	"github.com/tonymontanov/go-bybit/linears"
+	"github.com/tonymontanov/go-bybit/spot"
 )
 
 // Options — flat input for NewClient. The fields mirror the public
@@ -131,6 +132,23 @@ func NewClient(opt Options) (*bybit.Client, *linears.Client) {
 
 	var lc *linears.Client = client.Linears().(*linears.Client)
 	return client, lc
+}
+
+// NewSpotClient mirrors NewClient but returns the spot.Client cast.
+// Use this in examples that demonstrate the spot profile.
+func NewSpotClient(opt Options) (*bybit.Client, *spot.Client) {
+	var cfg bybit.Config = bybit.DefaultConfig()
+	cfg.APIKey = opt.APIKey
+	cfg.SecretKey = opt.APISecret
+	cfg.Testnet = opt.Testnet
+	cfg.Demo = opt.Demo
+
+	var client, err = bybit.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("bybit.NewClient: %v", err)
+	}
+	var sc *spot.Client = client.Spot().(*spot.Client)
+	return client, sc
 }
 
 // Classify renders any error as "[kind retCode=… status=…] message: cause".
