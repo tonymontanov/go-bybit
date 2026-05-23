@@ -2,36 +2,17 @@
 FILE: linears/types/order-book-snapshot.go
 
 DESCRIPTION:
-Order book snapshot for the Bybit V5 linear category. Returned by
-MarketData.GetOrderBook and pushed by the WebSocket "orderbook" topic
-with type=="snapshot".
-
-Bybit synchronization model:
-  - Each push (snapshot or delta) carries an "u" sequence number; deltas
-    are applied in order and a missing u indicates a gap that requires
-    a fresh snapshot.
-  - For snapshots Bybit also delivers "seq", a monotonic per-symbol
-    counter useful for cross-checking. The SDK preserves both.
-  - Bybit does NOT publish CRC32 checksums (unlike OKX) — gap detection
-    is purely sequence-based.
-
-FIELDS:
-  - Symbol     — e.g. "BTCUSDT".
-  - Bids       — buy levels, sorted descending by price.
-  - Asks       — sell levels, sorted ascending by price.
-  - UpdateID   — Bybit "u" — book sequence number.
-  - SeqID      — Bybit "seq" — symbol-wide sequence (snapshots only).
-  - TsMs       — Bybit publish timestamp (ms).
+Type alias re-export of the protocol-common
+`github.com/tonymontanov/go-bybit/v2/types.OrderBookSnapshot`. Wire
+shape and synchronisation model are identical for every Bybit V5
+category, so the linears profile reuses the common type. The alias
+preserves type identity — existing code that addresses
+`linears/types.OrderBookSnapshot` continues to compile unchanged.
 */
 
 package types
 
-// OrderBookSnapshot — order book snapshot for a single symbol.
-type OrderBookSnapshot struct {
-	Symbol   string
-	Bids     []OrderBookLevel
-	Asks     []OrderBookLevel
-	UpdateID int64
-	SeqID    int64
-	TsMs     int64
-}
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
+
+// OrderBookSnapshot — order book snapshot. See commontypes.OrderBookSnapshot.
+type OrderBookSnapshot = commontypes.OrderBookSnapshot

@@ -2,84 +2,82 @@
 FILE: linears/types/enums.go
 
 DESCRIPTION:
-Closed enums (typed strings) used by the Bybit V5 linear category.
-The values match the wire format Bybit accepts and returns — keep them
-exact, or the exchange will reject the request with retCode 10001.
+Closed enums (typed strings / typed ints) used by the Bybit V5 linear
+profile. Most values are PROTOCOL-COMMON and re-exported from the
+neutral `github.com/tonymontanov/go-bybit/v2/types` package via Go type
+aliases (`type X = commontypes.X`) — this preserves type identity and
+keeps `linears/types.SideTypeBuy` byte-for-byte compatible with
+`spot/types.SideTypeBuy` at the type-system level.
 
-GROUPING:
-  - Side (Buy/Sell)
-  - OrderType (Market/Limit)
-  - TimeInForce (GTC/IOC/FOK/PostOnly)
-  - PositionIdx (one-way / hedge-buy / hedge-sell)
-  - PositionMode (one-way / hedge)
-  - OrderStatus (subset, see file body for full Bybit list)
-  - Category — fixed to "linear" in this package; declared here so that
-    the rate-limiter / observers can use the same constant.
-  - TriggerBy / TpslMode — not in v1 scope; intentionally omitted.
-
-Bybit V5 also publishes orderType=PostOnly for spot, and timeInForce=
-PostOnly for derivatives — for symmetry with the desk-side enum
-("GTX = post-only"), we expose TimeInForcePostOnly. CreateOrder maps
-TimeInForcePostOnly → orderType=Limit + timeInForce=PostOnly when sending.
+Linears-only enums declared HERE:
+  - PositionIdx (one-way / hedge-buy / hedge-sell)  — derivatives concept.
+  - PositionMode (one-way / hedge)                  — derivatives concept.
+  - OrderStatus extra constants: Untriggered / Triggered. Both are
+    declared as constants of the aliased OrderStatus type so they are
+    interchangeable with the common values.
 */
 
 package types
 
-// Category is the Bybit V5 product family identifier sent on every REST
-// call. The linears profile is hard-pinned to "linear".
-type Category string
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
+
+// Category is the Bybit V5 product family identifier sent on every
+// REST call. The linears profile pins `linear`; the constant set is
+// re-exported so call sites can stay package-local.
+type Category = commontypes.Category
 
 const (
 	// CategoryLinear — USDT/USDC perpetual + USDC futures.
-	CategoryLinear Category = "linear"
-	// CategoryInverse — coin-margined contracts. Reserved for a later profile.
-	CategoryInverse Category = "inverse"
-	// CategorySpot — spot. Reserved for a later profile.
-	CategorySpot Category = "spot"
-	// CategoryOption — options. Reserved for a later profile.
-	CategoryOption Category = "option"
+	CategoryLinear = commontypes.CategoryLinear
+	// CategoryInverse — coin-margined contracts.
+	CategoryInverse = commontypes.CategoryInverse
+	// CategorySpot — spot.
+	CategorySpot = commontypes.CategorySpot
+	// CategoryOption — options.
+	CategoryOption = commontypes.CategoryOption
 )
 
 // SideType — order direction on the exchange wire.
-type SideType string
+type SideType = commontypes.SideType
 
 const (
 	// SideTypeBuy — buy / long.
-	SideTypeBuy SideType = "Buy"
+	SideTypeBuy = commontypes.SideTypeBuy
 	// SideTypeSell — sell / short.
-	SideTypeSell SideType = "Sell"
+	SideTypeSell = commontypes.SideTypeSell
 )
 
 // OrderType — order execution model on the exchange wire.
-type OrderType string
+type OrderType = commontypes.OrderType
 
 const (
 	// OrderTypeLimit — limit order.
-	OrderTypeLimit OrderType = "Limit"
+	OrderTypeLimit = commontypes.OrderTypeLimit
 	// OrderTypeMarket — market order.
-	OrderTypeMarket OrderType = "Market"
+	OrderTypeMarket = commontypes.OrderTypeMarket
 )
 
-// TimeInForceType — order expiry / queue behavior. The PostOnly variant
-// is recognised by Bybit V5 only when paired with orderType=Limit; the
-// SDK applies that mapping in trading.go.
-type TimeInForceType string
+// TimeInForceType — order expiry / queue behaviour.
+type TimeInForceType = commontypes.TimeInForceType
 
 const (
 	// TimeInForceGTC — Good Till Cancel (default).
-	TimeInForceGTC TimeInForceType = "GTC"
+	TimeInForceGTC = commontypes.TimeInForceGTC
 	// TimeInForceIOC — Immediate or Cancel.
-	TimeInForceIOC TimeInForceType = "IOC"
+	TimeInForceIOC = commontypes.TimeInForceIOC
 	// TimeInForceFOK — Fill or Kill.
-	TimeInForceFOK TimeInForceType = "FOK"
+	TimeInForceFOK = commontypes.TimeInForceFOK
 	// TimeInForcePostOnly — post-only (rejected if it would cross the
 	// book). Maps to orderType=Limit + timeInForce=PostOnly on the wire.
-	TimeInForcePostOnly TimeInForceType = "PostOnly"
+	TimeInForcePostOnly = commontypes.TimeInForcePostOnly
 )
 
-// PositionIdx — Bybit V5 uses a numeric position index that matters only
-// in hedge mode. In one-way mode it is always 0; in hedge mode 1 = long
-// position, 2 = short position.
+// PositionIdx — Bybit V5 uses a numeric position index that matters
+// only in hedge mode. In one-way mode it is always 0; in hedge mode
+// 1 = long position, 2 = short position.
+//
+// LINEARS-ONLY: the spot category has no positions and therefore no
+// position index — the type lives only in this package.
 type PositionIdx int
 
 const (
@@ -92,8 +90,10 @@ const (
 	PositionIdxHedgeSell PositionIdx = 2
 )
 
-// PositionMode — account-wide position mode. Wire codes are integers per
-// Bybit V5; the typed constants make call sites self-documenting.
+// PositionMode — account-wide position mode. Wire codes are integers
+// per Bybit V5; the typed constants make call sites self-documenting.
+//
+// LINEARS-ONLY.
 type PositionMode int
 
 const (
@@ -104,26 +104,33 @@ const (
 	PositionModeHedge PositionMode = 3
 )
 
-// OrderStatus is a subset of the Bybit V5 order states. The SDK does NOT
-// expose a closed enum of every state (the Bybit list is long and
-// occasionally extended); strings outside this list are returned verbatim
-// in OrderInfo.Status. Callers that need finer status discrimination
-// should read the raw status string.
-type OrderStatus string
+// OrderStatus is the Bybit V5 order state. The base catalogue lives
+// in commontypes; the linears profile additionally accepts the
+// trigger-order specific values (Untriggered, Triggered) — declared
+// here as constants of the aliased type so they interoperate with the
+// common values.
+//
+// The SDK does NOT expose a closed enum of every state (the Bybit
+// list is long and occasionally extended); strings outside this list
+// are returned verbatim in OrderInfo.Status. Callers that need finer
+// status discrimination should read the raw status string.
+type OrderStatus = commontypes.OrderStatus
 
 const (
-	// OrderStatusNew — accepted by the matcher, untriggered (alias: Created/New).
-	OrderStatusNew OrderStatus = "New"
+	// OrderStatusNew — accepted by the matcher, untriggered.
+	OrderStatusNew = commontypes.OrderStatusNew
 	// OrderStatusPartiallyFilled — partially filled, remainder live.
-	OrderStatusPartiallyFilled OrderStatus = "PartiallyFilled"
+	OrderStatusPartiallyFilled = commontypes.OrderStatusPartiallyFilled
 	// OrderStatusFilled — fully filled.
-	OrderStatusFilled OrderStatus = "Filled"
+	OrderStatusFilled = commontypes.OrderStatusFilled
 	// OrderStatusCancelled — cancelled.
-	OrderStatusCancelled OrderStatus = "Cancelled"
+	OrderStatusCancelled = commontypes.OrderStatusCancelled
 	// OrderStatusRejected — rejected by the exchange before reaching the book.
-	OrderStatusRejected OrderStatus = "Rejected"
-	// OrderStatusUntriggered — conditional/trigger order waiting for trigger.
+	OrderStatusRejected = commontypes.OrderStatusRejected
+	// OrderStatusUntriggered — conditional/trigger order waiting for
+	// trigger. LINEARS-ONLY.
 	OrderStatusUntriggered OrderStatus = "Untriggered"
-	// OrderStatusTriggered — conditional order triggered, awaiting fill.
+	// OrderStatusTriggered — conditional order triggered, awaiting
+	// fill. LINEARS-ONLY.
 	OrderStatusTriggered OrderStatus = "Triggered"
 )

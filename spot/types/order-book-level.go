@@ -2,17 +2,17 @@
 FILE: spot/types/order-book-level.go
 
 DESCRIPTION:
-One order book level for the Bybit V5 spot category. Wire format and
-shape are byte-identical to linears: positional [price, size] pair of
-strings normalised to `decimal.Decimal` at the SDK boundary.
+Type alias re-export of the protocol-common
+`github.com/tonymontanov/go-bybit/v2/types.OrderBookLevel`. The wire
+format is byte-identical across every Bybit V5 category, so the spot
+profile reuses the common type rather than redefining it. The alias
+preserves type identity — code that constructs
+`spot/types.OrderBookLevel{...}` continues to compile unchanged.
 */
 
 package types
 
-import "github.com/shopspring/decimal"
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
 
-// OrderBookLevel — one order book level.
-type OrderBookLevel struct {
-	Price decimal.Decimal
-	Size  decimal.Decimal
-}
+// OrderBookLevel — one order book level. See commontypes.OrderBookLevel.
+type OrderBookLevel = commontypes.OrderBookLevel

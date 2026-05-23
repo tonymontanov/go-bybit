@@ -2,42 +2,18 @@
 FILE: linears/types/candle.go
 
 DESCRIPTION:
-Historical kline (candlestick) for the Bybit V5 linear category. Mapped
-from the array returned by GET /v5/market/kline:
-
-	[ startMs, open, high, low, close, volume, turnover ]
-
-All numeric fields are strings on the wire and are normalized into
-decimal.Decimal here. Bybit V5 sorts klines descending by start time
-(newest first) — the SDK preserves that order to match Bybit
-documentation; callers that prefer chronological order should reverse.
-
-For the linear profile:
-  - Volume is denominated in BASE asset (BTC, ETH...). No contract
-    multiplier conversion is needed.
-  - Turnover is denominated in QUOTE asset (USDT/USDC).
-
-Bybit does NOT include a "closed" flag in REST responses; only the most
-recent (newest) candle in a kline.linear stream message has type
-"snapshot" and is treated as still forming. For REST historical fetches
-all candles are considered closed.
+Type alias re-export of the protocol-common Candle / Candles from
+`github.com/tonymontanov/go-bybit/v2/types`. Bybit V5 kline shape is
+identical across every category, so the linears profile reuses the
+common types.
 */
 
 package types
 
-import "github.com/shopspring/decimal"
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
 
-// Candle — one historical kline.
-type Candle struct {
-	OpenTimeMs  int64
-	Open        decimal.Decimal
-	High        decimal.Decimal
-	Low         decimal.Decimal
-	Close       decimal.Decimal
-	Volume      decimal.Decimal
-	VolumeQuote decimal.Decimal
-}
+// Candle — one historical kline. See commontypes.Candle.
+type Candle = commontypes.Candle
 
-// Candles — slice of candles. Order matches what Bybit returns
-// (descending by OpenTimeMs).
-type Candles []Candle
+// Candles — slice of candles. See commontypes.Candles.
+type Candles = commontypes.Candles

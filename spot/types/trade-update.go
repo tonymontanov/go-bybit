@@ -2,23 +2,15 @@
 FILE: spot/types/trade-update.go
 
 DESCRIPTION:
-TradeUpdate for the Bybit V5 spot WebSocket "publicTrade.{symbol}"
-topic. Wire shape and semantics are identical to linears (Bybit ships
-trade frames in batches; the SDK fans them out so handlers receive one
-TradeUpdate per call).
+Type alias re-export of the protocol-common
+`github.com/tonymontanov/go-bybit/v2/types.TradeUpdate`. The wire
+format of the publicTrade.{symbol} topic is identical across every
+Bybit V5 category, so the spot profile reuses the common type.
 */
 
 package types
 
-import "github.com/shopspring/decimal"
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
 
-// TradeUpdate — one trade event from the publicTrade topic.
-type TradeUpdate struct {
-	Symbol     string
-	Price      decimal.Decimal
-	Size       decimal.Decimal
-	Side       SideType
-	TradeID    string
-	TsMs       int64
-	BlockTrade bool
-}
+// TradeUpdate — one trade event from publicTrade. See commontypes.TradeUpdate.
+type TradeUpdate = commontypes.TradeUpdate

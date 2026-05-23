@@ -2,25 +2,15 @@
 FILE: spot/types/kline-update.go
 
 DESCRIPTION:
-KlineUpdate for the Bybit V5 spot WebSocket "kline.{interval}.{symbol}"
-topic. Wire shape and semantics are identical to linears.
+Type alias re-export of the protocol-common
+`github.com/tonymontanov/go-bybit/v2/types.KlineUpdate`. The wire
+format of the kline.{interval}.{symbol} topic is identical across
+every Bybit V5 category, so the spot profile reuses the common type.
 */
 
 package types
 
-import "github.com/shopspring/decimal"
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
 
-// KlineUpdate — one event from the kline.{interval}.{symbol} topic.
-type KlineUpdate struct {
-	Symbol    string
-	Interval  Timeframe
-	StartMs   int64
-	EndMs     int64
-	Open      decimal.Decimal
-	High      decimal.Decimal
-	Low       decimal.Decimal
-	Close     decimal.Decimal
-	Volume    decimal.Decimal
-	Turnover  decimal.Decimal
-	Confirmed bool
-}
+// KlineUpdate — one event from kline.{interval}.{symbol}. See commontypes.KlineUpdate.
+type KlineUpdate = commontypes.KlineUpdate

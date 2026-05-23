@@ -2,32 +2,18 @@
 FILE: spot/types/candle.go
 
 DESCRIPTION:
-Historical kline for the Bybit V5 spot category, mapped from the array
-returned by GET /v5/market/kline (positional [startMs, o, h, l, c, v,
-turnover]).
-
-Wire shape and ordering (descending by OpenTimeMs) are identical to
-linears. For spot:
-  - Volume is denominated in BASE asset.
-  - VolumeQuote is denominated in QUOTE asset.
-
-There is no contract multiplier on spot, so no conversion is needed.
+Type alias re-export of the protocol-common Candle / Candles from
+`github.com/tonymontanov/go-bybit/v2/types`. Bybit V5 kline shape is
+identical across every category, so the spot profile reuses the
+common types.
 */
 
 package types
 
-import "github.com/shopspring/decimal"
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
 
-// Candle — one historical kline.
-type Candle struct {
-	OpenTimeMs  int64
-	Open        decimal.Decimal
-	High        decimal.Decimal
-	Low         decimal.Decimal
-	Close       decimal.Decimal
-	Volume      decimal.Decimal
-	VolumeQuote decimal.Decimal
-}
+// Candle — one historical kline. See commontypes.Candle.
+type Candle = commontypes.Candle
 
-// Candles — slice of candles, descending by OpenTimeMs (Bybit's order).
-type Candles []Candle
+// Candles — slice of candles. See commontypes.Candles.
+type Candles = commontypes.Candles

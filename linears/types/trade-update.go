@@ -2,31 +2,15 @@
 FILE: linears/types/trade-update.go
 
 DESCRIPTION:
-TradeUpdate is one element of the "publicTrade.{symbol}" WebSocket topic.
-Bybit ships trade frames in batches; the dispatcher fans them out so
-handlers receive one TradeUpdate per call.
-
-FIELDS:
-  - Symbol     : Bybit symbol.
-  - Price      : trade price.
-  - Size       : trade size in base asset.
-  - Side       : taker side (Buy = aggressor bought, Sell = aggressor sold).
-  - TradeID    : Bybit trade id ("i" field).
-  - TsMs       : trade match timestamp (ms).
-  - BlockTrade : true for block trades (BT=true on the wire).
+Type alias re-export of the protocol-common
+`github.com/tonymontanov/go-bybit/v2/types.TradeUpdate`. The wire
+format of the publicTrade.{symbol} topic is identical across every
+Bybit V5 category, so the linears profile reuses the common type.
 */
 
 package types
 
-import "github.com/shopspring/decimal"
+import commontypes "github.com/tonymontanov/go-bybit/v2/types"
 
-// TradeUpdate — one trade event from the publicTrade topic.
-type TradeUpdate struct {
-	Symbol     string
-	Price      decimal.Decimal
-	Size       decimal.Decimal
-	Side       SideType
-	TradeID    string
-	TsMs       int64
-	BlockTrade bool
-}
+// TradeUpdate — one trade event from publicTrade. See commontypes.TradeUpdate.
+type TradeUpdate = commontypes.TradeUpdate

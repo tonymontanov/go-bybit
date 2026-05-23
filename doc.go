@@ -3,7 +3,7 @@ Package bybit is a high-performance Go SDK for the Bybit V5 exchange API,
 targeting HFT / algorithmic trading.
 
 The package is organised as a "fat" domain client (Variant B in the
-architecture spec):
+architecture spec) with a layered type system:
 
   - bybit.Client            — root SDK object: REST transport, signer,
     config, logger; lazily exposes domain
@@ -11,8 +11,29 @@ architecture spec):
   - linears.Client          — Linear category (USDT/USDC perpetual + USDC
     futures). Exposes Trading/Account/MarketData/
     Stream sub-clients.
-  - spot.Client             — Spot category (added in a later milestone,
-    same shape as linears).
+  - spot.Client             — Spot category (added in v2.0). Same shape
+    as linears.
+
+Type layout (since v2.1):
+
+  - github.com/tonymontanov/go-bybit/v2/types        layer 1 — protocol-common
+    types reused by every profile (Side / OrderType / TIF /
+    OrderBookLevel / Snapshot / Candle / Timeframe / TradeUpdate /
+    KlineUpdate / CancelOrderRequest / Balance / CoinBalance /
+    AccountType).
+  - github.com/tonymontanov/go-bybit/v2/linears/types layer 2 (profile)
+    — alias re-exports of layer 1 + linears-only types
+    (PositionIdx, PositionMode, SymbolInfo, OrderInfo,
+    Create/Modify Request, ExecutionInfo, TickerUpdate, PositionInfo,
+    BatchOrderResult).
+  - github.com/tonymontanov/go-bybit/v2/spot/types    layer 2 (profile)
+    — alias re-exports of layer 1 + spot-only types (MarginTrading,
+    MarketUnit, SymbolInfo, OrderInfo, Create/Modify Request,
+    ExecutionInfo, TickerUpdate, BatchOrderResult).
+
+The two profile packages are siblings: neither imports the other; both
+import only the neutral layer-1 package. Mixing derivatives methods
+into the spot client (or vice versa) is impossible by construction.
 
 Errors are typed as *bybit.Error (Kind = Network|RateLimit|Auth|
 InvalidRequest|Exchange|Unknown). Callers branch on bybit.IsRateLimit /

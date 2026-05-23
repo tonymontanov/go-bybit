@@ -5,11 +5,11 @@ HFT / algorithmic trading.
 
 Module path: `github.com/tonymontanov/go-bybit/v2`
 
-Latest stable: **v2.0.0** — see [CHANGELOG.md](CHANGELOG.md).
+Latest stable: **v2.1.0** — see [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
-`v2.0.0` covers the **linear** and **spot** categories end-to-end.
+`v2.1.0` covers the **linear** and **spot** categories end-to-end.
 Inverse and option categories remain out of scope.
 
 | Module | Status | Notes |
@@ -25,6 +25,7 @@ Inverse and option categories remain out of scope.
 | **M5** testnet / demo support | done | `Config.Testnet` / `Config.Demo` flags switch REST + WS hosts (`api-testnet.bybit.com` / `api-demo.bybit.com`, `stream-testnet.bybit.com` / `stream-demo.bybit.com`) |
 | **M6** `linears/types.SymbolInfo.MinPrice` / `.MaxPrice` | done in `v1.0.0-alpha.1` | parsed from `priceFilter.minPrice` / `priceFilter.maxPrice` |
 | **v2.0** `spot/` profile | done | Trading / Account / MarketData / Stream mirroring `linears/`; UTA-only batch + private streams; `internal/v5common` shared helpers; orderbook engine decoupled from profile types |
+| **v2.1** shared `types/` (layered model) | done | new top-level `types/` holds protocol-common domain types; `linears/types` and `spot/types` become alias re-exports + profile-specific types — eliminates parallel copy-paste, non-breaking |
 | **v2.5** broader API coverage | planned | asset / referral / pre-market / broker / extra account endpoints |
 
 ## Quick start
@@ -105,8 +106,22 @@ go-bybit/
                  (numeric parsing, reject-reason normalisation,
                  orderbook depth clamp, generic level conversion)
     ws/        — Conn: connect / auth / app-ping / reconnect+jitter / resubscribe
+  types/                  # v2.1+ — protocol-common domain types
+                          #         (Side / OrderType / TIF /
+                          #          OrderBookLevel / Snapshot /
+                          #          Candle / Timeframe / TradeUpdate /
+                          #          KlineUpdate / CancelOrderRequest /
+                          #          Balance / CoinBalance / AccountType)
   linears/                # v1.0+ — USDT/USDC perps + USDC futures
+                          #         linears/types: alias re-exports +
+                          #         linears-only (PositionIdx / PositionMode /
+                          #         SymbolInfo / OrderInfo / Create/Modify /
+                          #         ExecutionInfo / TickerUpdate / PositionInfo)
   spot/                   # v2.0+ — Bybit V5 spot category
+                          #         spot/types: alias re-exports +
+                          #         spot-only (MarginTrading / MarketUnit /
+                          #         SymbolInfo / OrderInfo / Create/Modify /
+                          #         ExecutionInfo / TickerUpdate)
   orderbook/              # M2+ — profile-agnostic engine
   examples/               # runnable end-to-end demos (see examples/README.md)
     market-data/          # public REST (linears)
