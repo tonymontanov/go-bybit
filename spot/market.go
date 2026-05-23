@@ -1,29 +1,29 @@
 /*
-FILE: linears/market.go
+FILE: spot/market.go
 
 DESCRIPTION:
-Public market-data sub-client for the Bybit V5 linear category. None of
-these endpoints require authentication; the SDK still funnels them
+Public market-data sub-client for the Bybit V5 spot category. None of
+these endpoints require authentication; the SDK still routes them
 through the same restDoer for unified rate-limit accounting.
 
 Implements:
-  - GetSymbolInfo        : GET /v5/market/instruments-info
-  - GetOrderBook         : GET /v5/market/orderbook
-  - GetHistoricalCandles : GET /v5/market/kline
+  - GetSymbolInfo        — GET /v5/market/instruments-info?category=spot
+  - GetOrderBook         — GET /v5/market/orderbook?category=spot
+  - GetHistoricalCandles — GET /v5/market/kline?category=spot
 
-BYBIT V5 SPECIFICS:
-  - /v5/market/orderbook depth limits (linear): 1, 50, 200, 500.
-    The SDK clamps the caller's requested depth to the nearest allowed
-    value (Bybit otherwise returns retCode 10001).
-  - /v5/market/kline returns klines DESCENDING by start time. The SDK
-    preserves that order (no reverse) — it matches Bybit docs and lets
-    callers cap the most-recent N candles cheaply (slice prefix). If
-    chronological order is needed, reverse on the caller side.
-  - /v5/market/instruments-info supports a "limit" query param for paged
-    listings; the SDK only exposes a single-symbol form for v1.
+BYBIT V5 SPECIFICS (spot):
+  - /v5/market/orderbook depth limits (spot): 1, 50, 200. The SDK
+    clamps the caller's requested depth to the nearest allowed value
+    (Bybit otherwise returns retCode 10001).
+  - /v5/market/kline returns klines DESCENDING by start time (matches
+    Bybit docs and lets callers cap the most-recent N candles cheaply).
+  - /v5/market/instruments-info exposes spot-specific fields:
+    `marginTrading`, `innovation`, `lotSizeFilter.basePrecision`,
+    `quotePrecision`, `minOrderQty`, `maxOrderQty`, `minOrderAmt`,
+    `maxOrderAmt`. Leverage filter is absent.
 */
 
-package linears
+package spot
 
 import (
 	"context"
@@ -35,7 +35,7 @@ import (
 	bybit "github.com/tonymontanov/go-bybit"
 	"github.com/tonymontanov/go-bybit/internal/rest"
 	"github.com/tonymontanov/go-bybit/internal/v5common"
-	"github.com/tonymontanov/go-bybit/linears/types"
+	bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"
 )
 
 // MarketDataClient — public market-data sub-client.
@@ -47,6 +47,27 @@ func newMarketDataClient(c *Client) *MarketDataClient {
 	return &MarketDataClient{c: c}
 }
 
+// HistoricalCandlesRequest — parameters for GetHistoricalCandles.
+//
+// FIELDS:
+//   - Symbol    : Bybit spot symbol (e.g. "BTCUSDT").
+//   - Timeframe : kline interval enum.
+//   - StartMs   : optional inclusive lower bound (epoch ms). Zero =
+//     "no lower bound".
+//   - EndMs     : optional inclusive upper bound. Zero = "no upper
+//     bound".
+//   - Limit     : page size, 1..1000. Zero or negative defaults to 200.
+//     Bybit caps at 1000 per call; the SDK does NOT paginate
+//     transparently here — callers requesting more than 1000
+//     candles should chunk by StartMs/EndMs themselves.
+type HistoricalCandlesRequest struct {
+	Symbol    string
+	Timeframe bybitspottypes.Timeframe
+	StartMs   int64
+	EndMs     int64
+	Limit     int
+}
+
 // ---------------------------------------------------------------------
 // Symbol info.
 // ---------------------------------------------------------------------
@@ -54,13 +75,13 @@ func newMarketDataClient(c *Client) *MarketDataClient {
 // GetSymbolInfo returns the instrument specification for `symbol`.
 // Returns ErrorKindInvalidRequest if the exchange has no row for the
 // symbol (Bybit replies with retCode 0 + empty list in that case).
-func (m *MarketDataClient) GetSymbolInfo(ctx context.Context, symbol string) (types.SymbolInfo, error) {
-	var out types.SymbolInfo
+func (m *MarketDataClient) GetSymbolInfo(ctx context.Context, symbol string) (bybitspottypes.SymbolInfo, error) {
+	var out bybitspottypes.SymbolInfo
 	if symbol == "" {
 		return out, bybit.NewError(bybit.ErrorKindInvalidRequest, "", "marketdata.GetSymbolInfo: symbol is empty", nil)
 	}
 	var query url.Values = url.Values{}
-	query.Set("category", string(types.CategoryLinear))
+	query.Set("category", string(bybitspottypes.CategorySpot))
 	query.Set("symbol", symbol)
 
 	var resp rest.Response
@@ -79,7 +100,7 @@ func (m *MarketDataClient) GetSymbolInfo(ctx context.Context, symbol string) (ty
 		return out, err
 	}
 
-	var payload instrumentsInfoPayload
+	var payload spotInstrumentsInfoPayload
 	if err = resp.UnmarshalResult(&payload); err != nil {
 		return out, bybit.NewError(bybit.ErrorKindUnknown, "", "marketdata.GetSymbolInfo: parse", err)
 	}
@@ -93,23 +114,24 @@ func (m *MarketDataClient) GetSymbolInfo(ctx context.Context, symbol string) (ty
 // Order book snapshot.
 // ---------------------------------------------------------------------
 
-// orderbookDepthLimits — allowed values for /v5/market/orderbook?limit=.
-// Bybit will reject any other value with retCode 10001. The list MUST
-// stay sorted ascending — v5common.ClampOrderbookDepth assumes that.
-var orderbookDepthLimits = []int{1, 50, 200, 500}
+// orderbookDepthLimits — allowed values for /v5/market/orderbook?limit=
+// when category=spot. Bybit will reject any other value with retCode
+// 10001. The list MUST stay sorted ascending — v5common.ClampOrderbook
+// Depth assumes that.
+var orderbookDepthLimits = []int{1, 50, 200}
 
 // GetOrderBook returns a depth snapshot for `symbol`. The depth argument
-// is clamped to the nearest allowed value (1, 50, 200, 500). depth ≤ 0
+// is clamped to the nearest allowed value (1, 50, 200). depth ≤ 0
 // resolves to 50, the SDK default.
-func (m *MarketDataClient) GetOrderBook(ctx context.Context, symbol string, depth int) (types.OrderBookSnapshot, error) {
-	var out types.OrderBookSnapshot
+func (m *MarketDataClient) GetOrderBook(ctx context.Context, symbol string, depth int) (bybitspottypes.OrderBookSnapshot, error) {
+	var out bybitspottypes.OrderBookSnapshot
 	if symbol == "" {
 		return out, bybit.NewError(bybit.ErrorKindInvalidRequest, "", "marketdata.GetOrderBook: symbol is empty", nil)
 	}
 	depth = clampOrderbookDepth(depth)
 
 	var query url.Values = url.Values{}
-	query.Set("category", string(types.CategoryLinear))
+	query.Set("category", string(bybitspottypes.CategorySpot))
 	query.Set("symbol", symbol)
 	query.Set("limit", strconv.Itoa(depth))
 
@@ -146,9 +168,8 @@ func (m *MarketDataClient) GetOrderBook(ctx context.Context, symbol string, dept
 }
 
 // clampOrderbookDepth maps an arbitrary integer to the nearest allowed
-// Bybit limit. ≤ 0 → 50 (SDK default). Above 500 → 500. Wraps
-// v5common.ClampOrderbookDepth, preserving the linears-specific "≤ 0
-// resolves to 50" backward-compatible default.
+// Bybit spot limit. ≤ 0 → 50 (SDK default). Above 200 → 200. Wraps
+// v5common.ClampOrderbookDepth.
 func clampOrderbookDepth(d int) int {
 	if d <= 0 {
 		return 50
@@ -160,32 +181,11 @@ func clampOrderbookDepth(d int) int {
 // Historical candles.
 // ---------------------------------------------------------------------
 
-// HistoricalCandlesRequest — parameters for GetHistoricalCandles.
-//
-// FIELDS:
-//   - Symbol    : Bybit symbol.
-//   - Timeframe : kline interval enum.
-//   - StartMs   : optional inclusive lower bound (epoch ms). Zero means
-//     "no lower bound".
-//   - EndMs     : optional inclusive upper bound. Zero means "no upper
-//     bound".
-//   - Limit     : page size, 1..1000. Zero or negative defaults to 200.
-//     Bybit caps at 1000 per call; the SDK does NOT paginate
-//     transparently here — callers requesting more than 1000
-//     candles should chunk by StartMs/EndMs themselves.
-type HistoricalCandlesRequest struct {
-	Symbol    string
-	Timeframe types.Timeframe
-	StartMs   int64
-	EndMs     int64
-	Limit     int
-}
-
 // GetHistoricalCandles returns historical klines for the request.
 //
 // Order is descending by OpenTimeMs (matching Bybit's wire format).
 // Use sort.Slice on the result if chronological order is needed.
-func (m *MarketDataClient) GetHistoricalCandles(ctx context.Context, req HistoricalCandlesRequest) (types.Candles, error) {
+func (m *MarketDataClient) GetHistoricalCandles(ctx context.Context, req HistoricalCandlesRequest) (bybitspottypes.Candles, error) {
 	if req.Symbol == "" {
 		return nil, bybit.NewError(bybit.ErrorKindInvalidRequest, "", "marketdata.GetHistoricalCandles: symbol is empty", nil)
 	}
@@ -201,7 +201,7 @@ func (m *MarketDataClient) GetHistoricalCandles(ctx context.Context, req Histori
 	}
 
 	var query url.Values = url.Values{}
-	query.Set("category", string(types.CategoryLinear))
+	query.Set("category", string(bybitspottypes.CategorySpot))
 	query.Set("symbol", req.Symbol)
 	query.Set("interval", req.Timeframe.Wire())
 	query.Set("limit", strconv.Itoa(limit))
@@ -233,14 +233,14 @@ func (m *MarketDataClient) GetHistoricalCandles(ctx context.Context, req Histori
 		return nil, bybit.NewError(bybit.ErrorKindUnknown, "", "marketdata.GetHistoricalCandles: parse", err)
 	}
 
-	var out types.Candles = make(types.Candles, 0, len(payload.List))
+	var out bybitspottypes.Candles = make(bybitspottypes.Candles, 0, len(payload.List))
 	var i int
 	for i = 0; i < len(payload.List); i++ {
 		var row []string = payload.List[i]
 		if len(row) < 7 {
 			continue
 		}
-		out = append(out, types.Candle{
+		out = append(out, bybitspottypes.Candle{
 			OpenTimeMs:  ms(row[0]),
 			Open:        dec(row[1]),
 			High:        dec(row[2]),
@@ -257,68 +257,62 @@ func (m *MarketDataClient) GetHistoricalCandles(ctx context.Context, req Histori
 // Wire payloads + converters.
 // ---------------------------------------------------------------------
 
-type instrumentsInfoPayload struct {
-	Category       string             `json:"category"`
-	List           []instrumentsEntry `json:"list"`
-	NextPageCursor string             `json:"nextPageCursor"`
+type spotInstrumentsInfoPayload struct {
+	Category       string                 `json:"category"`
+	List           []spotInstrumentsEntry `json:"list"`
+	NextPageCursor string                 `json:"nextPageCursor"`
 }
 
-type instrumentsEntry struct {
-	Symbol         string                 `json:"symbol"`
-	ContractType   string                 `json:"contractType"`
-	Status         string                 `json:"status"`
-	BaseCoin       string                 `json:"baseCoin"`
-	QuoteCoin      string                 `json:"quoteCoin"`
-	SettleCoin     string                 `json:"settleCoin"`
-	PriceFilter    instrumentsPriceFilter `json:"priceFilter"`
-	LotSizeFilter  instrumentsLotFilter   `json:"lotSizeFilter"`
-	LeverageFilter instrumentsLevFilter   `json:"leverageFilter"`
+// spotInstrumentsEntry mirrors Bybit's /v5/market/instruments-info row
+// for category=spot. Note: marginTrading is bool-ish on the wire (a
+// string enum) and innovation is a "0"/"1" string per Bybit docs.
+type spotInstrumentsEntry struct {
+	Symbol        string                     `json:"symbol"`
+	BaseCoin      string                     `json:"baseCoin"`
+	QuoteCoin     string                     `json:"quoteCoin"`
+	Status        string                     `json:"status"`
+	Innovation    string                     `json:"innovation"`
+	MarginTrading string                     `json:"marginTrading"`
+	PriceFilter   spotInstrumentsPriceFilter `json:"priceFilter"`
+	LotSizeFilter spotInstrumentsLotFilter   `json:"lotSizeFilter"`
 }
 
-type instrumentsPriceFilter struct {
+type spotInstrumentsPriceFilter struct {
 	MinPrice string `json:"minPrice"`
 	MaxPrice string `json:"maxPrice"`
 	TickSize string `json:"tickSize"`
 }
 
-type instrumentsLotFilter struct {
-	MaxOrderQty         string `json:"maxOrderQty"`
-	MinOrderQty         string `json:"minOrderQty"`
-	QtyStep             string `json:"qtyStep"`
-	PostOnlyMaxOrderQty string `json:"postOnlyMaxOrderQty"`
-	MinNotionalValue    string `json:"minNotionalValue"`
-	MaxMktOrderQty      string `json:"maxMktOrderQty"`
+type spotInstrumentsLotFilter struct {
+	BasePrecision  string `json:"basePrecision"`
+	QuotePrecision string `json:"quotePrecision"`
+	MinOrderQty    string `json:"minOrderQty"`
+	MaxOrderQty    string `json:"maxOrderQty"`
+	MinOrderAmt    string `json:"minOrderAmt"`
+	MaxOrderAmt    string `json:"maxOrderAmt"`
 }
 
-type instrumentsLevFilter struct {
-	MinLeverage  string `json:"minLeverage"`
-	MaxLeverage  string `json:"maxLeverage"`
-	LeverageStep string `json:"leverageStep"`
-}
-
-func convertSymbolInfo(src instrumentsEntry) types.SymbolInfo {
+func convertSymbolInfo(src spotInstrumentsEntry) bybitspottypes.SymbolInfo {
 	var tick = dec(src.PriceFilter.TickSize)
-	var step = dec(src.LotSizeFilter.QtyStep)
-	return types.SymbolInfo{
+	var basePrec = dec(src.LotSizeFilter.BasePrecision)
+	return bybitspottypes.SymbolInfo{
 		Symbol:            src.Symbol,
 		BaseCoin:          src.BaseCoin,
 		QuoteCoin:         src.QuoteCoin,
-		SettleCoin:        src.SettleCoin,
-		ContractType:      src.ContractType,
 		Status:            src.Status,
 		TickSize:          tick,
 		MinPrice:          dec(src.PriceFilter.MinPrice),
 		MaxPrice:          dec(src.PriceFilter.MaxPrice),
-		QtyStep:           step,
+		BasePrecision:     basePrec,
+		QuotePrecision:    dec(src.LotSizeFilter.QuotePrecision),
 		MinOrderQty:       dec(src.LotSizeFilter.MinOrderQty),
 		MaxOrderQty:       dec(src.LotSizeFilter.MaxOrderQty),
-		MaxMarketOrderQty: dec(src.LotSizeFilter.MaxMktOrderQty),
-		MinNotionalValue:  dec(src.LotSizeFilter.MinNotionalValue),
-		MinLeverage:       dec(src.LeverageFilter.MinLeverage),
-		MaxLeverage:       dec(src.LeverageFilter.MaxLeverage),
-		LeverageStep:      dec(src.LeverageFilter.LeverageStep),
+		MinOrderAmt:       dec(src.LotSizeFilter.MinOrderAmt),
+		MaxOrderAmt:       dec(src.LotSizeFilter.MaxOrderAmt),
+		MarginTrading:     bybitspottypes.MarginTrading(src.MarginTrading),
+		Innovation:        src.Innovation == "1",
 		PricePrecision:    -tick.Exponent(),
-		QuantityPrecision: -step.Exponent(),
+		QuantityPrecision: -basePrec.Exponent(),
 	}
 }
 
@@ -331,9 +325,9 @@ type orderbookSnapshotPayload struct {
 	Seq    int64      `json:"seq"`
 }
 
-func convertLevels(rows [][]string) []types.OrderBookLevel {
-	return v5common.ConvertOrderBookLevels(rows, func(p, s decimal.Decimal) types.OrderBookLevel {
-		return types.OrderBookLevel{Price: p, Size: s}
+func convertLevels(rows [][]string) []bybitspottypes.OrderBookLevel {
+	return v5common.ConvertOrderBookLevels(rows, func(p, s decimal.Decimal) bybitspottypes.OrderBookLevel {
+		return bybitspottypes.OrderBookLevel{Price: p, Size: s}
 	})
 }
 

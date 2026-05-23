@@ -17,7 +17,6 @@ import (
 	"testing"
 
 	"github.com/shopspring/decimal"
-	"github.com/tonymontanov/go-bybit/linears/types"
 )
 
 func dq(s string) decimal.Decimal {
@@ -30,8 +29,8 @@ func dq(s string) decimal.Decimal {
 	return d
 }
 
-func lvl(p, s string) types.OrderBookLevel {
-	return types.OrderBookLevel{Price: dq(p), Size: dq(s)}
+func lvl(p, s string) Level {
+	return Level{Price: dq(p), Size: dq(s)}
 }
 
 func TestEngine_ApplySnapshot_StampsState(t *testing.T) {
@@ -39,8 +38,8 @@ func TestEngine_ApplySnapshot_StampsState(t *testing.T) {
 	var e *Engine = NewEngine("BTCUSDT", 200)
 	var res ApplyResult = e.ApplySnapshot(Snapshot{
 		Symbol:   "BTCUSDT",
-		Bids:     []types.OrderBookLevel{lvl("100", "1"), lvl("101", "0.5")},
-		Asks:     []types.OrderBookLevel{lvl("102", "2"), lvl("103", "1.5")},
+		Bids:     []Level{lvl("100", "1"), lvl("101", "0.5")},
+		Asks:     []Level{lvl("102", "2"), lvl("103", "1.5")},
 		UpdateID: 100,
 		SeqID:    9001,
 		TsMs:     1700000000000,
@@ -109,8 +108,8 @@ func TestEngine_ApplyDelta_HappyPath(t *testing.T) {
 	var e *Engine = NewEngine("BTCUSDT", 200)
 	e.ApplySnapshot(Snapshot{
 		Symbol:   "BTCUSDT",
-		Bids:     []types.OrderBookLevel{lvl("100", "1"), lvl("99", "0.5")},
-		Asks:     []types.OrderBookLevel{lvl("101", "1"), lvl("102", "0.5")},
+		Bids:     []Level{lvl("100", "1"), lvl("99", "0.5")},
+		Asks:     []Level{lvl("101", "1"), lvl("102", "0.5")},
 		UpdateID: 100,
 		SeqID:    9001,
 		TsMs:     1700000000000,
@@ -121,8 +120,8 @@ func TestEngine_ApplyDelta_HappyPath(t *testing.T) {
 		UpdateID: 101,
 		SeqID:    9002,
 		TsMs:     1700000001000,
-		Bids:     []types.OrderBookLevel{lvl("99.5", "0.3")},
-		Asks: []types.OrderBookLevel{
+		Bids:     []Level{lvl("99.5", "0.3")},
+		Asks: []Level{
 			lvl("101", "1.7"),
 			lvl("102", "0"),
 		},
@@ -153,8 +152,8 @@ func TestEngine_BestBidAsk(t *testing.T) {
 	}
 	e.ApplySnapshot(Snapshot{
 		Symbol:   "BTCUSDT",
-		Bids:     []types.OrderBookLevel{lvl("100", "1.5")},
-		Asks:     []types.OrderBookLevel{lvl("101", "0.5")},
+		Bids:     []Level{lvl("100", "1.5")},
+		Asks:     []Level{lvl("101", "0.5")},
 		UpdateID: 100,
 	})
 	bidPx, bidSz, askPx, askSz = e.BestBidAsk()
@@ -185,10 +184,10 @@ func TestEngine_TopLevels_ClampsN(t *testing.T) {
 	var e *Engine = NewEngine("BTCUSDT", 200)
 	e.ApplySnapshot(Snapshot{
 		Symbol: "BTCUSDT",
-		Bids: []types.OrderBookLevel{
+		Bids: []Level{
 			lvl("100", "1"), lvl("99", "1"), lvl("98", "1"),
 		},
-		Asks: []types.OrderBookLevel{
+		Asks: []Level{
 			lvl("101", "1"), lvl("102", "1"),
 		},
 		UpdateID: 100,
@@ -210,8 +209,8 @@ func TestEngine_RaceFree(t *testing.T) {
 	var e *Engine = NewEngine("BTCUSDT", 200)
 	e.ApplySnapshot(Snapshot{
 		Symbol:   "BTCUSDT",
-		Bids:     []types.OrderBookLevel{lvl("100", "1")},
-		Asks:     []types.OrderBookLevel{lvl("101", "1")},
+		Bids:     []Level{lvl("100", "1")},
+		Asks:     []Level{lvl("101", "1")},
 		UpdateID: 100,
 	})
 
@@ -223,7 +222,7 @@ func TestEngine_RaceFree(t *testing.T) {
 		for i = 0; i < 1000; i++ {
 			e.ApplyDelta(Delta{
 				UpdateID: int64(101 + i),
-				Bids:     []types.OrderBookLevel{lvl("100", decimal.NewFromInt(int64(i)).String())},
+				Bids:     []Level{lvl("100", decimal.NewFromInt(int64(i)).String())},
 			})
 		}
 	}()

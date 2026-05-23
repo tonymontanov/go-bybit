@@ -1,15 +1,14 @@
 /*
-FILE: linears/stream.go
+FILE: spot/stream.go
 
 DESCRIPTION:
-StreamClient — domain WebSocket subscription sub-client for the Bybit V5
-linear category. Public Watch* methods live in this file; private Watch*
+StreamClient — domain WebSocket subscription sub-client for the Bybit
+V5 spot category. Public Watch* methods live here; private Watch*
 methods live in stream-private.go.
 
 GENERAL PATTERN FOR EACH WATCH*:
   1. Validate the input arguments (symbol non-empty, depth allowed, ...).
-  2. Lazily start the corresponding ws.Conn under ctx (publicConn /
-     privateConn on the parent linears.Client).
+  2. Lazily start the spot public ws.Conn under ctx.
   3. Build a ws.Subscription with Topic + Handler + (optional) Reset.
   4. Subscribe; the connection performs (re)connect / auth / resubscribe
      transparently.
@@ -24,23 +23,17 @@ ERROR HANDLING:
     Watch* uses Subscription.Reset to drop local engine state ahead of
     the next snapshot.
 
-CANCELLATION:
-  - When ctx is cancelled the supervisor terminates and the socket
-    closes. Watch* does NOT call Unsubscribe — there is no point on a
-    closed socket.
-
-STREAM TOPIC NAMES (linear):
-  - orderbook.{depth}.{symbol}    — depth = 1, 50, 200, 500.
+STREAM TOPIC NAMES (spot):
+  - orderbook.{depth}.{symbol}    — depth = 1, 50, 200.
   - publicTrade.{symbol}          — taker trades.
-  - tickers.{symbol}              — top-of-book + 24h stats + funding.
+  - tickers.{symbol}              — top-of-book + 24h stats.
   - kline.{interval}.{symbol}     — kline events.
-  - order                         — own orders (private).
-  - position                      — own positions (private).
-  - execution                     — own fills (private).
+  - order                         — own orders (private, UTA only).
+  - execution                     — own fills (private, UTA only).
   - wallet                        — own wallet state (private).
 */
 
-package linears
+package spot
 
 import (
 	"context"
@@ -49,11 +42,11 @@ import (
 	bybit "github.com/tonymontanov/go-bybit"
 	"github.com/tonymontanov/go-bybit/internal/codec"
 	"github.com/tonymontanov/go-bybit/internal/ws"
-	"github.com/tonymontanov/go-bybit/linears/types"
 	"github.com/tonymontanov/go-bybit/orderbook"
+	bybitspottypes "github.com/tonymontanov/go-bybit/spot/types"
 )
 
-// StreamClient — WebSocket subscription sub-client for the linear profile.
+// StreamClient — WebSocket subscription sub-client for the spot profile.
 type StreamClient struct {
 	c *Client
 }
@@ -62,9 +55,9 @@ func newStreamClient(c *Client) *StreamClient {
 	return &StreamClient{c: c}
 }
 
-// Close gracefully tears down the public and private WS connections owned
-// by this StreamClient. It is safe to call Close even if the WS were
-// never opened.
+// Close gracefully tears down the public and private WS connections
+// owned by this StreamClient. Safe to call when neither connection has
+// been opened.
 func (s *StreamClient) Close() error {
 	if s.c.publicWs != nil {
 		_ = s.c.publicWs.Close()
@@ -88,24 +81,23 @@ type rawOrderbookPush struct {
 	Seq    int64      `json:"seq"`
 }
 
-// WatchOrderBook subscribes to orderbook.{depth}.{symbol} and maintains a
-// local orderbook.Engine. After every successful apply the handler is
+// WatchOrderBook subscribes to orderbook.{depth}.{symbol} and maintains
+// a local orderbook.Engine. After every successful apply the handler is
 // called with the top-`displayDepth` levels and the engine's
 // LastUpdateID as snapshot.UpdateID. depth is the wire-level depth
-// (clamped to 1/50/200/500); displayDepth controls how many levels the
-// SDK forwards to the caller (≤0 → all available).
+// (clamped to 1/50/200 for spot); displayDepth controls how many levels
+// the SDK forwards (≤0 → all available).
 //
-// On a service-restart or a sequence gap the engine is marked dirty,
-// errHandler is called once with the *bberr.Error describing the gap
-// kind, and further deltas are ignored until the next snapshot push
-// (which Bybit ships automatically on a fresh subscription / new
-// connection).
+// On a service-restart or sequence gap the engine is marked dirty,
+// errHandler is called once, and further deltas are ignored until the
+// next snapshot push (Bybit ships one automatically on a fresh
+// subscription / reconnect).
 func (s *StreamClient) WatchOrderBook(
 	ctx context.Context,
 	symbol string,
 	depth int,
 	displayDepth int,
-	handler func(types.OrderBookSnapshot),
+	handler func(bybitspottypes.OrderBookSnapshot),
 	errHandler func(error),
 ) error {
 	if symbol == "" {
@@ -121,9 +113,6 @@ func (s *StreamClient) WatchOrderBook(
 		Topic: topic,
 		Reset: func() { eng.MarkResynced(0, 0, 0) },
 		Handler: func(_, pushType string, payload []byte) {
-			// pushType is the envelope's "type" field — "snapshot" /
-			// "delta" / "" (rare). The orderbook routing branches on it
-			// directly; helpers below absorb the parse-and-apply work.
 			s.applyOrderbookFrame(eng, pushType, payload, handler, errHandler, displayDepth)
 		},
 	}
@@ -138,15 +127,12 @@ func (s *StreamClient) WatchOrderBook(
 }
 
 // applyOrderbookFrame decodes one Bybit V5 orderbook push and routes it
-// into the engine. The pushType argument is the envelope's "type" field
-// — "snapshot" picks ApplySnapshot, "delta" picks ApplyDelta. Anything
-// else (including the empty string) is treated as a snapshot, which is
-// the safe fallback: snapshots always reset the local state cleanly.
+// into the engine. Snapshot/delta routing matches the linears profile.
 func (s *StreamClient) applyOrderbookFrame(
 	eng *orderbook.Engine,
 	pushType string,
 	payload []byte,
-	handler func(types.OrderBookSnapshot),
+	handler func(bybitspottypes.OrderBookSnapshot),
 	errHandler func(error),
 	displayDepth int,
 ) {
@@ -174,7 +160,6 @@ func (s *StreamClient) applyOrderbookFrame(
 			return
 		}
 	} else {
-		// "snapshot" or unknown — replace local state.
 		eng.ApplySnapshot(orderbook.Snapshot{
 			Symbol:   eng.Symbol(),
 			Bids:     bids,
@@ -187,20 +172,18 @@ func (s *StreamClient) applyOrderbookFrame(
 		return
 	}
 	var topBids, topAsks = eng.TopLevels(displayDepth)
-	handler(types.OrderBookSnapshot{
+	handler(bybitspottypes.OrderBookSnapshot{
 		Symbol:   eng.Symbol(),
-		Bids:     engineLevelsToTypes(topBids),
-		Asks:     engineLevelsToTypes(topAsks),
+		Bids:     toSpotLevels(topBids),
+		Asks:     toSpotLevels(topAsks),
 		UpdateID: eng.LastUpdateID(),
 		SeqID:    eng.LastSeqID(),
 	})
 }
 
-// parseLevelsForEngine converts Bybit's wire-level rows into the
-// orderbook engine's level type. The engine type is independent of any
-// profile package, so we convert at the boundary; the linears handler
-// later flips engine levels back into types.OrderBookLevel via
-// engineLevelsToTypes.
+// parseLevelsForEngine turns Bybit's wire-level rows into the orderbook
+// engine's level type. The engine's level type is shared via the public
+// `orderbook` package, which uses its own struct (not spot/types.Level).
 func parseLevelsForEngine(rows [][]string) []orderbook.Level {
 	if len(rows) == 0 {
 		return nil
@@ -219,16 +202,16 @@ func parseLevelsForEngine(rows [][]string) []orderbook.Level {
 	return out
 }
 
-// engineLevelsToTypes converts engine-side levels to the public linears
-// OrderBookLevel slice the handler expects.
-func engineLevelsToTypes(in []orderbook.Level) []types.OrderBookLevel {
+// toSpotLevels converts orderbook.Level slices into the spot-typed
+// OrderBookLevel slice the user handler expects.
+func toSpotLevels(in []orderbook.Level) []bybitspottypes.OrderBookLevel {
 	if len(in) == 0 {
 		return nil
 	}
-	var out []types.OrderBookLevel = make([]types.OrderBookLevel, len(in))
+	var out []bybitspottypes.OrderBookLevel = make([]bybitspottypes.OrderBookLevel, len(in))
 	var i int
 	for i = 0; i < len(in); i++ {
-		out[i] = types.OrderBookLevel{Price: in[i].Price, Size: in[i].Size}
+		out[i] = bybitspottypes.OrderBookLevel{Price: in[i].Price, Size: in[i].Size}
 	}
 	return out
 }
@@ -237,47 +220,42 @@ func engineLevelsToTypes(in []orderbook.Level) []types.OrderBookLevel {
 // PUBLIC: tickers.
 // =====================================================================
 
-// rawTickerPush — fields the SDK exposes from tickers.{symbol}. Every
-// numeric field is a wire-string; absent fields stay empty (Bybit only
-// ships changed values in deltas).
+// rawTickerPush — fields exposed from tickers.{symbol} for spot. Spot
+// has no funding / open-interest / mark-price, so derivative-only
+// fields are absent. usdIndexPrice is spot-only (USD reference for
+// non-USDT quote pairs).
 type rawTickerPush struct {
-	Symbol            string `json:"symbol"`
-	LastPrice         string `json:"lastPrice"`
-	IndexPrice        string `json:"indexPrice"`
-	MarkPrice         string `json:"markPrice"`
-	Bid1Price         string `json:"bid1Price"`
-	Bid1Size          string `json:"bid1Size"`
-	Ask1Price         string `json:"ask1Price"`
-	Ask1Size          string `json:"ask1Size"`
-	PrevPrice24h      string `json:"prevPrice24h"`
-	HighPrice24h      string `json:"highPrice24h"`
-	LowPrice24h       string `json:"lowPrice24h"`
-	Volume24h         string `json:"volume24h"`
-	Turnover24h       string `json:"turnover24h"`
-	FundingRate       string `json:"fundingRate"`
-	NextFundingTime   string `json:"nextFundingTime"`
-	OpenInterest      string `json:"openInterest"`
-	OpenInterestValue string `json:"openInterestValue"`
+	Symbol        string `json:"symbol"`
+	LastPrice     string `json:"lastPrice"`
+	Bid1Price     string `json:"bid1Price"`
+	Bid1Size      string `json:"bid1Size"`
+	Ask1Price     string `json:"ask1Price"`
+	Ask1Size      string `json:"ask1Size"`
+	PrevPrice24h  string `json:"prevPrice24h"`
+	HighPrice24h  string `json:"highPrice24h"`
+	LowPrice24h   string `json:"lowPrice24h"`
+	Volume24h     string `json:"volume24h"`
+	Turnover24h   string `json:"turnover24h"`
+	UsdIndexPrice string `json:"usdIndexPrice"`
 }
 
-// WatchTicker subscribes to tickers.{symbol} and merges Bybit's deltas
-// into a running TickerUpdate snapshot before invoking the handler.
+// WatchTicker subscribes to tickers.{symbol}.
 func (s *StreamClient) WatchTicker(
 	ctx context.Context,
 	symbol string,
-	handler func(types.TickerUpdate),
+	handler func(bybitspottypes.TickerUpdate),
 	errHandler func(error),
 ) error {
 	if symbol == "" {
 		return bybit.NewError(bybit.ErrorKindInvalidRequest, "", "stream.WatchTicker: symbol is empty", nil)
 	}
 	var topic string = "tickers." + symbol
-	var merged types.TickerUpdate = types.TickerUpdate{Symbol: symbol}
+	var merged bybitspottypes.TickerUpdate = bybitspottypes.TickerUpdate{Symbol: symbol}
 
 	var sub *ws.Subscription = &ws.Subscription{
 		Topic: topic,
 		Reset: func() {
-			merged = types.TickerUpdate{Symbol: symbol}
+			merged = bybitspottypes.TickerUpdate{Symbol: symbol}
 		},
 		Handler: func(_, pushType string, payload []byte) {
 			var push rawTickerPush
@@ -285,10 +263,8 @@ func (s *StreamClient) WatchTicker(
 				s.c.logger().Warn("stream.WatchTicker: parse", bybit.Str("symbol", symbol), bybit.Err(err))
 				return
 			}
-			// "snapshot" replaces, "delta" merges. Bybit sends a single
-			// snapshot at subscribe time and deltas after that.
 			if pushType == "snapshot" {
-				merged = types.TickerUpdate{Symbol: symbol}
+				merged = bybitspottypes.TickerUpdate{Symbol: symbol}
 			}
 			mergeTickerUpdate(&merged, push)
 			handler(merged)
@@ -305,17 +281,10 @@ func (s *StreamClient) WatchTicker(
 }
 
 // mergeTickerUpdate merges the changed fields from a delta into the
-// previous snapshot. Empty wire fields are treated as "unchanged" — Bybit
-// omits unchanged fields from delta pushes.
-func mergeTickerUpdate(dst *types.TickerUpdate, src rawTickerPush) {
+// previous snapshot.
+func mergeTickerUpdate(dst *bybitspottypes.TickerUpdate, src rawTickerPush) {
 	if src.LastPrice != "" {
 		dst.LastPrice = dec(src.LastPrice)
-	}
-	if src.IndexPrice != "" {
-		dst.IndexPrice = dec(src.IndexPrice)
-	}
-	if src.MarkPrice != "" {
-		dst.MarkPrice = dec(src.MarkPrice)
 	}
 	if src.Bid1Price != "" {
 		dst.BestBid = dec(src.Bid1Price)
@@ -344,17 +313,8 @@ func mergeTickerUpdate(dst *types.TickerUpdate, src rawTickerPush) {
 	if src.Turnover24h != "" {
 		dst.Turnover24h = dec(src.Turnover24h)
 	}
-	if src.FundingRate != "" {
-		dst.FundingRate = dec(src.FundingRate)
-	}
-	if src.NextFundingTime != "" {
-		dst.NextFundingTimeMs = ms(src.NextFundingTime)
-	}
-	if src.OpenInterest != "" {
-		dst.OpenInterest = dec(src.OpenInterest)
-	}
-	if src.OpenInterestValue != "" {
-		dst.OpenInterestValue = dec(src.OpenInterestValue)
+	if src.UsdIndexPrice != "" {
+		dst.UsdIndexPrice = dec(src.UsdIndexPrice)
 	}
 }
 
@@ -362,8 +322,8 @@ func mergeTickerUpdate(dst *types.TickerUpdate, src rawTickerPush) {
 // PUBLIC: trades.
 // =====================================================================
 
-// rawTradePush — one element of publicTrade.{symbol}. Bybit ships an
-// array of these per push.
+// rawTradePush — one element of publicTrade.{symbol}. Spot uses the
+// same wire schema as linears.
 type rawTradePush struct {
 	TradeID    string `json:"i"`
 	Symbol     string `json:"s"`
@@ -375,12 +335,11 @@ type rawTradePush struct {
 	Ts         int64  `json:"T"`
 }
 
-// WatchTrades subscribes to publicTrade.{symbol} and fans the resulting
-// array out — the handler is called once per trade.
+// WatchTrades subscribes to publicTrade.{symbol}.
 func (s *StreamClient) WatchTrades(
 	ctx context.Context,
 	symbol string,
-	handler func(types.TradeUpdate),
+	handler func(bybitspottypes.TradeUpdate),
 	errHandler func(error),
 ) error {
 	if symbol == "" {
@@ -398,11 +357,11 @@ func (s *StreamClient) WatchTrades(
 			}
 			var i int
 			for i = 0; i < len(trades); i++ {
-				handler(types.TradeUpdate{
+				handler(bybitspottypes.TradeUpdate{
 					Symbol:     symbol,
 					Price:      dec(trades[i].Price),
 					Size:       dec(trades[i].Volume),
-					Side:       types.SideType(trades[i].Side),
+					Side:       bybitspottypes.SideType(trades[i].Side),
 					TradeID:    trades[i].TradeID,
 					TsMs:       trades[i].Ts,
 					BlockTrade: trades[i].BlockTrade,
@@ -424,7 +383,6 @@ func (s *StreamClient) WatchTrades(
 // PUBLIC: kline.
 // =====================================================================
 
-// rawKlinePush — one element of kline.{interval}.{symbol}.
 type rawKlinePush struct {
 	Start    int64  `json:"start"`
 	End      int64  `json:"end"`
@@ -442,8 +400,8 @@ type rawKlinePush struct {
 func (s *StreamClient) WatchKline(
 	ctx context.Context,
 	symbol string,
-	tf types.Timeframe,
-	handler func(types.KlineUpdate),
+	tf bybitspottypes.Timeframe,
+	handler func(bybitspottypes.KlineUpdate),
 	errHandler func(error),
 ) error {
 	if symbol == "" {
@@ -464,9 +422,9 @@ func (s *StreamClient) WatchKline(
 			}
 			var i int
 			for i = 0; i < len(klines); i++ {
-				handler(types.KlineUpdate{
+				handler(bybitspottypes.KlineUpdate{
 					Symbol:    symbol,
-					Interval:  types.Timeframe(klines[i].Interval),
+					Interval:  bybitspottypes.Timeframe(klines[i].Interval),
 					StartMs:   klines[i].Start,
 					EndMs:     klines[i].End,
 					Open:      dec(klines[i].Open),

@@ -41,8 +41,17 @@ import (
 	"sync"
 
 	"github.com/shopspring/decimal"
-	"github.com/tonymontanov/go-bybit/linears/types"
 )
+
+// Level — one order book level inside the engine. Profile packages
+// (linears, spot, ...) own their own public OrderBookLevel struct and
+// convert at the package boundary; keeping the engine's level type
+// independent from any profile package avoids the import cycle that
+// would otherwise prevent the spot profile from sharing the engine.
+type Level struct {
+	Price decimal.Decimal
+	Size  decimal.Decimal
+}
 
 // SideKind identifies the order book side in internal helpers.
 type SideKind uint8
@@ -88,8 +97,8 @@ func (g GapKind) String() string {
 // "snapshot"-typed WS push or from a REST GetOrderBook call.
 type Snapshot struct {
 	Symbol   string
-	Bids     []types.OrderBookLevel
-	Asks     []types.OrderBookLevel
+	Bids     []Level
+	Asks     []Level
 	UpdateID int64
 	SeqID    int64
 	TsMs     int64
@@ -98,8 +107,8 @@ type Snapshot struct {
 // Delta — incremental order book update from a "delta"-typed WS push.
 type Delta struct {
 	Symbol   string
-	Bids     []types.OrderBookLevel
-	Asks     []types.OrderBookLevel
+	Bids     []Level
+	Asks     []Level
 	UpdateID int64
 	SeqID    int64
 	TsMs     int64
@@ -121,8 +130,8 @@ type Engine struct {
 	maxDepth int
 
 	mu       sync.RWMutex
-	bids     []types.OrderBookLevel
-	asks     []types.OrderBookLevel
+	bids     []Level
+	asks     []Level
 	lastU    int64
 	lastSeq  int64
 	lastTsMs int64
@@ -139,8 +148,8 @@ func NewEngine(symbol string, maxDepth int) *Engine {
 	return &Engine{
 		symbol:   symbol,
 		maxDepth: maxDepth,
-		bids:     make([]types.OrderBookLevel, 0, maxDepth),
-		asks:     make([]types.OrderBookLevel, 0, maxDepth),
+		bids:     make([]Level, 0, maxDepth),
+		asks:     make([]Level, 0, maxDepth),
 	}
 }
 
@@ -272,7 +281,7 @@ func (e *Engine) MarkResynced(updateID, seqID, tsMs int64) {
 
 // TopLevels returns a copy of the top-n bid/ask levels. n ≤ 0 returns
 // the full local state.
-func (e *Engine) TopLevels(n int) (bids, asks []types.OrderBookLevel) {
+func (e *Engine) TopLevels(n int) (bids, asks []Level) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	var nb int = len(e.bids)
@@ -285,8 +294,8 @@ func (e *Engine) TopLevels(n int) (bids, asks []types.OrderBookLevel) {
 			na = n
 		}
 	}
-	bids = make([]types.OrderBookLevel, nb)
-	asks = make([]types.OrderBookLevel, na)
+	bids = make([]Level, nb)
+	asks = make([]Level, na)
 	copy(bids, e.bids[:nb])
 	copy(asks, e.asks[:na])
 	return bids, asks
@@ -309,8 +318,8 @@ func (e *Engine) BestBidAsk() (bidPx, bidSz, askPx, askSz decimal.Decimal) {
 }
 
 // applyLevelLocked applies one level. Size 0 → remove. e.mu must be held.
-func (e *Engine) applyLevelLocked(side SideKind, lvl types.OrderBookLevel) {
-	var slice *[]types.OrderBookLevel
+func (e *Engine) applyLevelLocked(side SideKind, lvl Level) {
+	var slice *[]Level
 	var less func(a, b decimal.Decimal) bool
 	if side == SideBid {
 		slice = &e.bids
@@ -319,7 +328,7 @@ func (e *Engine) applyLevelLocked(side SideKind, lvl types.OrderBookLevel) {
 		slice = &e.asks
 		less = func(a, b decimal.Decimal) bool { return a.LessThan(b) }
 	}
-	var arr []types.OrderBookLevel = *slice
+	var arr []Level = *slice
 	var idx int = sort.Search(len(arr), func(i int) bool {
 		return !less(arr[i].Price, lvl.Price)
 	})
@@ -330,7 +339,7 @@ func (e *Engine) applyLevelLocked(side SideKind, lvl types.OrderBookLevel) {
 			arr[idx].Size = lvl.Size
 		}
 	} else if !lvl.Size.IsZero() {
-		arr = append(arr, types.OrderBookLevel{})
+		arr = append(arr, Level{})
 		copy(arr[idx+1:], arr[idx:])
 		arr[idx] = lvl
 	}
@@ -349,8 +358,8 @@ func (e *Engine) trimLocked() {
 
 // copyLevelsSortedDesc copies and sorts by price descending (bids).
 // Truncates to max levels.
-func copyLevelsSortedDesc(src []types.OrderBookLevel, max int) []types.OrderBookLevel {
-	var out []types.OrderBookLevel = make([]types.OrderBookLevel, 0, len(src))
+func copyLevelsSortedDesc(src []Level, max int) []Level {
+	var out []Level = make([]Level, 0, len(src))
 	var i int
 	for i = 0; i < len(src); i++ {
 		if src[i].Size.IsZero() {
@@ -369,8 +378,8 @@ func copyLevelsSortedDesc(src []types.OrderBookLevel, max int) []types.OrderBook
 
 // copyLevelsSortedAsc copies and sorts by price ascending (asks).
 // Truncates to max levels.
-func copyLevelsSortedAsc(src []types.OrderBookLevel, max int) []types.OrderBookLevel {
-	var out []types.OrderBookLevel = make([]types.OrderBookLevel, 0, len(src))
+func copyLevelsSortedAsc(src []Level, max int) []Level {
+	var out []Level = make([]Level, 0, len(src))
 	var i int
 	for i = 0; i < len(src); i++ {
 		if src[i].Size.IsZero() {
