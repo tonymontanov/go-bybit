@@ -28,9 +28,10 @@ import (
 
 	"github.com/shopspring/decimal"
 	bybit "github.com/tonymontanov/go-bybit/v2"
+	"github.com/tonymontanov/go-bybit/v2/account"
+	"github.com/tonymontanov/go-bybit/v2/asset"
 	"github.com/tonymontanov/go-bybit/v2/linears"
 	"github.com/tonymontanov/go-bybit/v2/spot"
-	"github.com/tonymontanov/go-bybit/v2/asset"
 )
 
 // Options — flat input for NewClient. The fields mirror the public
@@ -166,6 +167,27 @@ func NewAssetClient(opt Options) (*bybit.Client, *asset.Client) {
 	}
 	var ac *asset.Client = client.Asset().(*asset.Client)
 	return client, ac
+}
+
+// NewExtendedAccountClient mirrors NewAssetClient but returns account.Client.
+func NewExtendedAccountClient(opt Options) (*bybit.Client, *account.Client) {
+	var cfg bybit.Config = bybit.DefaultConfig()
+	cfg.APIKey = opt.APIKey
+	cfg.SecretKey = opt.APISecret
+	cfg.Testnet = opt.Testnet
+	cfg.Demo = opt.Demo
+
+	var client, err = bybit.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("bybit.NewClient: %v", err)
+	}
+	var ac *account.Client = client.Account().(*account.Client)
+	return client, ac
+}
+
+// NewAccountClient is an alias for NewExtendedAccountClient.
+func NewAccountClient(opt Options) (*bybit.Client, *account.Client) {
+	return NewExtendedAccountClient(opt)
 }
 
 // Classify renders any error as "[kind retCode=… status=…] message: cause".

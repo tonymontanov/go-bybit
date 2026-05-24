@@ -26,8 +26,9 @@ Inverse and option categories remain out of scope.
 | **M6** `linears/types.SymbolInfo.MinPrice` / `.MaxPrice` | done in `v1.0.0-alpha.1` | parsed from `priceFilter.minPrice` / `priceFilter.maxPrice` |
 | **v2.0** `spot/` profile | done | Trading / Account / MarketData / Stream mirroring `linears/`; UTA-only batch + private streams; `internal/v5common` shared helpers; orderbook engine decoupled from profile types |
 | **v2.1** shared `types/` (layered model) | done | new top-level `types/` holds protocol-common domain types; `linears/types` and `spot/types` become alias re-exports + profile-specific types — eliminates parallel copy-paste, non-breaking |
-| **v2.5** `asset/` profile (C1) | in progress | coin info, internal transfers, deposit/withdraw REST; examples/asset-coin-info |
-| **v2.5** broader API coverage | planned | broker / referral / pre-market / extended account endpoints |
+| **v2.5** `asset/` profile (C1) | done | coin info, internal transfers, deposit/withdraw REST; examples/asset-coin-info |
+| **v2.5** `account/` profile (C2) | in progress | UTA info, fee rate, transaction log, collateral/borrow, greeks, margin settings |
+| **v2.5** broader API coverage | planned | broker / referral / pre-market / market extended |
 
 ## Quick start
 

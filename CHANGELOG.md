@@ -23,6 +23,18 @@ documented in this file. The project follows [Semantic Versioning].
   - `examples/asset-coin-info` — read-only smoke test
 - **Root client** — `RegisterAssetFactory` / `Client.Asset()` lazy accessor
   (import `_ "github.com/tonymontanov/go-bybit/v2/asset"` or any asset import)
+- **`account/` (new profile, C2)** — Bybit V5 extended account REST:
+  - `GetAccountInfo` — `/v5/account/info`
+  - `GetFeeRate` — `/v5/account/fee-rate`
+  - `GetTransactionLog` — `/v5/account/transaction-log`
+  - `GetCollateralInfo` — `/v5/account/collateral-info`
+  - `GetBorrowHistory` — `/v5/account/borrow-history`
+  - `GetCoinGreeks` — `/v5/asset/coin-greeks`
+  - `SetMarginMode`, `SetCollateralCoin`, `SetHedgingMode`
+  - `account/types/` — domain types
+  - `examples/extended-account-info` — read-only smoke test
+- **Root client** — `RegisterAccountFactory` / `Client.Account()` lazy accessor
+  (import `_ "github.com/tonymontanov/go-bybit/v2/account"` or any account import)
 
 ### Changed
 

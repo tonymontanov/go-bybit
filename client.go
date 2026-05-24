@@ -54,6 +54,9 @@ type Client struct {
 
 	assetOnce sync.Once
 	assetVal  any
+
+	accountOnce sync.Once
+	accountVal  any
 }
 
 // NewClient validates cfg, fills defaults, and returns a configured root
@@ -203,6 +206,29 @@ func (c *Client) Asset() any {
 		c.assetVal = assetFactory(c)
 	})
 	return c.assetVal
+}
+
+// accountFactory is set by account.init() via RegisterAccountFactory.
+var accountFactory func(c *Client) any
+
+// RegisterAccountFactory wires the account.Client builder. Idempotent.
+func RegisterAccountFactory(f func(c *Client) any) {
+	if accountFactory == nil {
+		accountFactory = f
+	}
+}
+
+// Account returns the *account.Client (typed as any). nil when the account
+// package has not been imported.
+func (c *Client) Account() any {
+	c.accountOnce.Do(func() {
+		if accountFactory == nil {
+			c.logger.Warn(`bybit.Client.Account: account factory is not registered; import _ "github.com/tonymontanov/go-bybit/v2/account"`)
+			return
+		}
+		c.accountVal = accountFactory(c)
+	})
+	return c.accountVal
 }
 
 // Compile-time assertion: *Error implements the error interface.

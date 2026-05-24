@@ -31,6 +31,13 @@ account (Bybit V5 private spot streams and batch endpoints are UTA-only).
 | `spot-account-info` | `spot.Account.{GetWalletBalance, GetOpenOrders}` | yes (read-only) |
 | `spot-inventory-monitor` | `spot.Stream.{WatchOrders, WatchExecutions, WatchWallet}` (long-running) | yes (read-only, UTA) |
 
+## Read-only — asset / extended account (v2.5)
+
+| Example | What it exercises | Keys required |
+| --- | --- | --- |
+| `asset-coin-info` | `asset.Client.GetCoinInfo` | yes (read-only) |
+| `extended-account-info` | `account.Client.{GetAccountInfo, GetFeeRate, GetCollateralInfo}` | yes (read-only) |
+
 ## Trading
 
 The trading examples refuse to run against PRODUCTION unless `BYBIT_ALLOW_LIVE=1` is set explicitly.
