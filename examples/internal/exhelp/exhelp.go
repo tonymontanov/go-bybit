@@ -30,6 +30,7 @@ import (
 	bybit "github.com/tonymontanov/go-bybit/v2"
 	"github.com/tonymontanov/go-bybit/v2/account"
 	"github.com/tonymontanov/go-bybit/v2/asset"
+	"github.com/tonymontanov/go-bybit/v2/broker"
 	"github.com/tonymontanov/go-bybit/v2/linears"
 	"github.com/tonymontanov/go-bybit/v2/spot"
 )
@@ -188,6 +189,22 @@ func NewExtendedAccountClient(opt Options) (*bybit.Client, *account.Client) {
 // NewAccountClient is an alias for NewExtendedAccountClient.
 func NewAccountClient(opt Options) (*bybit.Client, *account.Client) {
 	return NewExtendedAccountClient(opt)
+}
+
+// NewBrokerClient mirrors NewAssetClient but returns broker.Client.
+func NewBrokerClient(opt Options) (*bybit.Client, *broker.Client) {
+	var cfg bybit.Config = bybit.DefaultConfig()
+	cfg.APIKey = opt.APIKey
+	cfg.SecretKey = opt.APISecret
+	cfg.Testnet = opt.Testnet
+	cfg.Demo = opt.Demo
+
+	var client, err = bybit.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("bybit.NewClient: %v", err)
+	}
+	var bc *broker.Client = client.Broker().(*broker.Client)
+	return client, bc
 }
 
 // Classify renders any error as "[kind retCode=… status=…] message: cause".

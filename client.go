@@ -57,6 +57,9 @@ type Client struct {
 
 	accountOnce sync.Once
 	accountVal  any
+
+	brokerOnce sync.Once
+	brokerVal  any
 }
 
 // NewClient validates cfg, fills defaults, and returns a configured root
@@ -229,6 +232,29 @@ func (c *Client) Account() any {
 		c.accountVal = accountFactory(c)
 	})
 	return c.accountVal
+}
+
+// brokerFactory is set by broker.init() via RegisterBrokerFactory.
+var brokerFactory func(c *Client) any
+
+// RegisterBrokerFactory wires the broker.Client builder. Idempotent.
+func RegisterBrokerFactory(f func(c *Client) any) {
+	if brokerFactory == nil {
+		brokerFactory = f
+	}
+}
+
+// Broker returns the *broker.Client (typed as any). nil when the broker
+// package has not been imported.
+func (c *Client) Broker() any {
+	c.brokerOnce.Do(func() {
+		if brokerFactory == nil {
+			c.logger.Warn(`bybit.Client.Broker: broker factory is not registered; import _ "github.com/tonymontanov/go-bybit/v2/broker"`)
+			return
+		}
+		c.brokerVal = brokerFactory(c)
+	})
+	return c.brokerVal
 }
 
 // Compile-time assertion: *Error implements the error interface.

@@ -15,6 +15,10 @@ architecture spec) with a layered type system:
     as linears.
   - asset.Client            — Asset / funding-account REST (added in
     v2.5-dev). Coin info, internal transfers, deposits, withdrawals.
+  - account.Client          — Extended UTA account REST (added in
+    v2.5-dev). Fee rates, transaction log, collateral/borrow, settings.
+  - broker.Client           — Exchange broker REST (added in v2.5-dev).
+    Rebates, sub-account deposits, voucher awards.
 
 Type layout (since v2.1):
 

@@ -28,8 +28,9 @@ Inverse and option categories remain out of scope.
 | **v2.1** shared `types/` (layered model) | done | new top-level `types/` holds protocol-common domain types; `linears/types` and `spot/types` become alias re-exports + profile-specific types — eliminates parallel copy-paste, non-breaking |
 | **v2.5** `asset/` profile (C1) | done | coin info, internal transfers, deposit/withdraw REST; examples/asset-coin-info |
 | **v2.5** `account/` profile (C2) | done | UTA info, fee rate, transaction log, collateral/borrow, greeks, margin settings |
-| **v2.5** `linears/` market extended (C3) | in progress | funding rate history, open interest REST |
-| **v2.5** broader API coverage | planned | broker / referral / pre-market |
+| **v2.5** `linears/` market extended (C3) | done | funding rate history, open interest REST |
+| **v2.5** `broker/` profile (C4) | in progress | rebates, sub-account deposits, voucher awards |
+| **v2.5** broader API coverage | planned | referral / pre-market |
 
 ## Quick start
 

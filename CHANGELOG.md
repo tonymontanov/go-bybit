@@ -40,6 +40,15 @@ documented in this file. The project follows [Semantic Versioning].
   - `GetOpenInterest` — `/v5/market/open-interest`
   - `linears/types/` — `FundingRateHistory`, `OpenInterestHistory` domain types
   - `examples/market-data` — extended with funding/OI dumps
+- **`broker/` (new profile, C4)** — Bybit V5 exchange broker REST:
+  - `GetAccountInfo` — `/v5/broker/account-info`
+  - `GetEarnings` — `/v5/broker/earnings-info`
+  - `GetSubMemberDepositRecords` — `/v5/broker/asset/query-sub-member-deposit-record`
+  - `GetVoucherSpec`, `DistributeVoucher`, `GetVoucherDistribution`
+  - `broker/types/` — domain types
+  - `examples/broker-account-info` — read-only smoke test
+- **Root client** — `RegisterBrokerFactory` / `Client.Broker()` lazy accessor
+  (import `_ "github.com/tonymontanov/go-bybit/v2/broker"` or any broker import)
 
 ### Changed
 
