@@ -110,6 +110,7 @@ const (
 //
 //   - linears: UNIFIED + CONTRACT
 //   - spot:    UNIFIED + SPOT
+//   - asset:   UNIFIED + SPOT + CONTRACT + FUND + EARN (transfer targets)
 //
 // Sending an inapplicable accountType yields retCode 10001 on the wire.
 type AccountType string
@@ -121,4 +122,9 @@ const (
 	AccountTypeContract AccountType = "CONTRACT"
 	// AccountTypeSpot — Classic Account spot wallet.
 	AccountTypeSpot AccountType = "SPOT"
+	// AccountTypeFund — Funding wallet (deposits / withdrawals routing).
+	// Used by /v5/asset/* endpoints; not accepted on trading endpoints.
+	AccountTypeFund AccountType = "FUND"
+	// AccountTypeEarn — Earn / staking wallet partition.
+	AccountTypeEarn AccountType = "EARN"
 )

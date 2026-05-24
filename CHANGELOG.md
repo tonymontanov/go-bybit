@@ -11,7 +11,23 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
-(no changes since v2.1.1)
+### Added
+
+- **`asset/` (new profile, C1)** — Bybit V5 funding-account REST:
+  - `GetCoinInfo` — `/v5/asset/coin/query-info`
+  - `GetAllCoinsBalance`, `GetSingleCoinBalance`, `GetTransferableCoins`
+  - `CreateInternalTransfer`, `GetInternalTransferRecords`
+  - `GetDepositAddress`, `GetDepositRecords`, `GetAllowedDepositCoins`, `SetDepositAccount`
+  - `CreateWithdraw`, `CancelWithdraw`, `GetWithdrawRecords`, `GetWithdrawableAmount`
+  - `asset/types/` — coin/transfer/deposit/withdraw domain types
+  - `examples/asset-coin-info` — read-only smoke test
+- **Root client** — `RegisterAssetFactory` / `Client.Asset()` lazy accessor
+  (import `_ "github.com/tonymontanov/go-bybit/v2/asset"` or any asset import)
+
+### Changed
+
+- **`types/enums.go`** — add `AccountTypeFund` / `AccountTypeEarn` for asset
+  wallet partitions (FUND / EARN on `/v5/asset/*` wire).
 
 ## [v2.1.1] — 2026-05-24
 

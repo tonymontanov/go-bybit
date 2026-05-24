@@ -30,6 +30,7 @@ import (
 	bybit "github.com/tonymontanov/go-bybit/v2"
 	"github.com/tonymontanov/go-bybit/v2/linears"
 	"github.com/tonymontanov/go-bybit/v2/spot"
+	"github.com/tonymontanov/go-bybit/v2/asset"
 )
 
 // Options — flat input for NewClient. The fields mirror the public
@@ -149,6 +150,22 @@ func NewSpotClient(opt Options) (*bybit.Client, *spot.Client) {
 	}
 	var sc *spot.Client = client.Spot().(*spot.Client)
 	return client, sc
+}
+
+// NewAssetClient mirrors NewSpotClient but returns the asset.Client cast.
+func NewAssetClient(opt Options) (*bybit.Client, *asset.Client) {
+	var cfg bybit.Config = bybit.DefaultConfig()
+	cfg.APIKey = opt.APIKey
+	cfg.SecretKey = opt.APISecret
+	cfg.Testnet = opt.Testnet
+	cfg.Demo = opt.Demo
+
+	var client, err = bybit.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("bybit.NewClient: %v", err)
+	}
+	var ac *asset.Client = client.Asset().(*asset.Client)
+	return client, ac
 }
 
 // Classify renders any error as "[kind retCode=… status=…] message: cause".

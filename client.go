@@ -51,6 +51,9 @@ type Client struct {
 
 	spotOnce sync.Once
 	spotVal  any
+
+	assetOnce sync.Once
+	assetVal  any
 }
 
 // NewClient validates cfg, fills defaults, and returns a configured root
@@ -177,6 +180,29 @@ func (c *Client) Spot() any {
 		c.spotVal = spotFactory(c)
 	})
 	return c.spotVal
+}
+
+// assetFactory is set by asset.init() via RegisterAssetFactory.
+var assetFactory func(c *Client) any
+
+// RegisterAssetFactory wires the asset.Client builder. Idempotent.
+func RegisterAssetFactory(f func(c *Client) any) {
+	if assetFactory == nil {
+		assetFactory = f
+	}
+}
+
+// Asset returns the *asset.Client (typed as any). nil when the asset
+// package has not been imported.
+func (c *Client) Asset() any {
+	c.assetOnce.Do(func() {
+		if assetFactory == nil {
+			c.logger.Warn(`bybit.Client.Asset: asset factory is not registered; import _ "github.com/tonymontanov/go-bybit/v2/asset"`)
+			return
+		}
+		c.assetVal = assetFactory(c)
+	})
+	return c.assetVal
 }
 
 // Compile-time assertion: *Error implements the error interface.

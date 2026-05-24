@@ -13,6 +13,8 @@ architecture spec) with a layered type system:
     Stream sub-clients.
   - spot.Client             — Spot category (added in v2.0). Same shape
     as linears.
+  - asset.Client            — Asset / funding-account REST (added in
+    v2.5-dev). Coin info, internal transfers, deposits, withdrawals.
 
 Type layout (since v2.1):
 
