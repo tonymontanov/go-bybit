@@ -11,6 +11,13 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
+## [v2.5.0] — 2026-05-24
+
+Part C — broader Bybit V5 API coverage on top of the stable v2.1 line
+(linears + spot). All new profiles follow the same factory pattern
+(`Register*Factory` / `Client.*()`). Existing linears/spot APIs are
+unchanged — **non-breaking** for current consumers.
+
 ### Added
 
 - **`asset/` (new profile, C1)** — Bybit V5 funding-account REST:

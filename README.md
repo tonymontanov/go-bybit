@@ -5,7 +5,7 @@ HFT / algorithmic trading.
 
 Module path: `github.com/tonymontanov/go-bybit/v2`
 
-Latest stable: **v2.1.1** — see [CHANGELOG.md](CHANGELOG.md).
+Latest stable: **v2.5.0** — see [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
