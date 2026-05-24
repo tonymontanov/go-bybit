@@ -30,8 +30,8 @@ Inverse and option categories remain out of scope.
 | **v2.5** `account/` profile (C2) | done | UTA info, fee rate, transaction log, collateral/borrow, greeks, margin settings |
 | **v2.5** `linears/` market extended (C3) | done | funding rate history, open interest REST |
 | **v2.5** `broker/` profile (C4) | done | rebates, sub-account deposits, voucher awards |
-| **v2.5** `affiliate/` profile (C5) | in progress | affiliate user list/info, friend referrals |
-| **v2.5** broader API coverage | planned | pre-market |
+| **v2.5** `affiliate/` profile (C5) | done | affiliate user list/info, friend referrals |
+| **v2.5** `premarket/` profile (C6) | done | PreLaunch instruments, risk limits, pre-market tickers |
 
 ## Quick start
 

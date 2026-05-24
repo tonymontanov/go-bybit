@@ -63,6 +63,9 @@ type Client struct {
 
 	affiliateOnce sync.Once
 	affiliateVal  any
+
+	preMarketOnce sync.Once
+	preMarketVal  any
 }
 
 // NewClient validates cfg, fills defaults, and returns a configured root
@@ -281,6 +284,29 @@ func (c *Client) Affiliate() any {
 		c.affiliateVal = affiliateFactory(c)
 	})
 	return c.affiliateVal
+}
+
+// preMarketFactory is set by premarket.init() via RegisterPreMarketFactory.
+var preMarketFactory func(c *Client) any
+
+// RegisterPreMarketFactory wires the premarket.Client builder. Idempotent.
+func RegisterPreMarketFactory(f func(c *Client) any) {
+	if preMarketFactory == nil {
+		preMarketFactory = f
+	}
+}
+
+// PreMarket returns the *premarket.Client (typed as any). nil when the
+// premarket package has not been imported.
+func (c *Client) PreMarket() any {
+	c.preMarketOnce.Do(func() {
+		if preMarketFactory == nil {
+			c.logger.Warn(`bybit.Client.PreMarket: premarket factory is not registered; import _ "github.com/tonymontanov/go-bybit/v2/premarket"`)
+			return
+		}
+		c.preMarketVal = preMarketFactory(c)
+	})
+	return c.preMarketVal
 }
 
 // Compile-time assertion: *Error implements the error interface.

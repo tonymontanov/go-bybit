@@ -39,6 +39,7 @@ account (Bybit V5 private spot streams and batch endpoints are UTA-only).
 | `extended-account-info` | `account.Client.{GetAccountInfo, GetFeeRate, GetCollateralInfo}` | yes (read-only) |
 | `broker-account-info` | `broker.Client.{GetAccountInfo, GetEarnings}` | yes (broker master, read-only) |
 | `affiliate-user-list` | `affiliate.Client.{GetAffiliateUserList, GetFriendReferrals}` | yes (affiliate key for user list) |
+| `premarket-instruments` | `premarket.Client.{GetPreLaunchInstruments, GetRiskLimit, GetTickers}` | no |
 
 ## Trading
 

@@ -33,6 +33,7 @@ import (
 	"github.com/tonymontanov/go-bybit/v2/asset"
 	"github.com/tonymontanov/go-bybit/v2/broker"
 	"github.com/tonymontanov/go-bybit/v2/linears"
+	"github.com/tonymontanov/go-bybit/v2/premarket"
 	"github.com/tonymontanov/go-bybit/v2/spot"
 )
 
@@ -222,6 +223,23 @@ func NewAffiliateClient(opt Options) (*bybit.Client, *affiliate.Client) {
 	}
 	var ac *affiliate.Client = client.Affiliate().(*affiliate.Client)
 	return client, ac
+}
+
+// NewPreMarketClient mirrors NewClient but returns the premarket.Client cast.
+// Public endpoints — API keys are optional.
+func NewPreMarketClient(opt Options) (*bybit.Client, *premarket.Client) {
+	var cfg bybit.Config = bybit.DefaultConfig()
+	cfg.APIKey = opt.APIKey
+	cfg.SecretKey = opt.APISecret
+	cfg.Testnet = opt.Testnet
+	cfg.Demo = opt.Demo
+
+	var client, err = bybit.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("bybit.NewClient: %v", err)
+	}
+	var pc *premarket.Client = client.PreMarket().(*premarket.Client)
+	return client, pc
 }
 
 // Classify renders any error as "[kind retCode=… status=…] message: cause".

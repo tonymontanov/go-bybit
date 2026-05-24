@@ -21,6 +21,8 @@ architecture spec) with a layered type system:
     Rebates, sub-account deposits, voucher awards.
   - affiliate.Client        — Affiliate / referral REST (added in v2.5-dev).
     Affiliate user list/info and friend invitation referrals.
+  - premarket.Client        — Pre-market perpetual REST (added in v2.5-dev).
+    PreLaunch instruments, risk limits, tickers with pre-listing fields.
 
 Type layout (since v2.1):
 

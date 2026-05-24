@@ -57,6 +57,14 @@ documented in this file. The project follows [Semantic Versioning].
   - `examples/affiliate-user-list` — read-only smoke test
 - **Root client** — `RegisterAffiliateFactory` / `Client.Affiliate()` lazy accessor
   (import `_ "github.com/tonymontanov/go-bybit/v2/affiliate"` or any affiliate import)
+- **`premarket/` (new profile, C6)** — Bybit V5 pre-market perpetual REST:
+  - `GetInstruments`, `GetPreLaunchInstruments` — `/v5/market/instruments-info`
+  - `GetRiskLimit` — `/v5/market/risk-limit`
+  - `GetTickers` — `/v5/market/tickers` (preOpenPrice, preQty, curPreListingPhase)
+  - `premarket/types/` — domain types with `preListingInfo` parsing
+  - `examples/premarket-instruments` — read-only smoke test (no keys required)
+- **Root client** — `RegisterPreMarketFactory` / `Client.PreMarket()` lazy accessor
+  (import `_ "github.com/tonymontanov/go-bybit/v2/premarket"` or any premarket import)
 
 ### Changed
 
