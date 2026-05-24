@@ -11,7 +11,22 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
-(no changes since v2.1.0)
+(no changes since v2.1.1)
+
+## [v2.1.1] — 2026-05-24
+
+Documentation-only patch on top of the complete v2 line (spot profile
+in v2.0.0 + shared `types/` in v2.1.0). No API or wire-format changes.
+
+### Changed
+
+- **`spot/types/ticker-update.go`** — file-level WARNING + struct comment
+  explaining that Bybit V5 spot `tickers.{symbol}` never populates
+  `bid1Price` / `ask1Price` / `bid1Size` / `ask1Size` (verified live).
+  Directs consumers to `StreamClient.WatchOrderBook(depth=1)` for
+  top-of-book on spot.
+- **`spot/stream.go`** — `WatchTicker` doc-block adds the same
+  SPOT TOP-OF-BOOK CAVEAT.
 
 ## [v2.1.0] — 2026-05-23
 
