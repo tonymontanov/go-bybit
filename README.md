@@ -29,8 +29,9 @@ Inverse and option categories remain out of scope.
 | **v2.5** `asset/` profile (C1) | done | coin info, internal transfers, deposit/withdraw REST; examples/asset-coin-info |
 | **v2.5** `account/` profile (C2) | done | UTA info, fee rate, transaction log, collateral/borrow, greeks, margin settings |
 | **v2.5** `linears/` market extended (C3) | done | funding rate history, open interest REST |
-| **v2.5** `broker/` profile (C4) | in progress | rebates, sub-account deposits, voucher awards |
-| **v2.5** broader API coverage | planned | referral / pre-market |
+| **v2.5** `broker/` profile (C4) | done | rebates, sub-account deposits, voucher awards |
+| **v2.5** `affiliate/` profile (C5) | in progress | affiliate user list/info, friend referrals |
+| **v2.5** broader API coverage | planned | pre-market |
 
 ## Quick start
 

@@ -19,6 +19,8 @@ architecture spec) with a layered type system:
     v2.5-dev). Fee rates, transaction log, collateral/borrow, settings.
   - broker.Client           — Exchange broker REST (added in v2.5-dev).
     Rebates, sub-account deposits, voucher awards.
+  - affiliate.Client        — Affiliate / referral REST (added in v2.5-dev).
+    Affiliate user list/info and friend invitation referrals.
 
 Type layout (since v2.1):
 

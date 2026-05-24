@@ -49,6 +49,14 @@ documented in this file. The project follows [Semantic Versioning].
   - `examples/broker-account-info` — read-only smoke test
 - **Root client** — `RegisterBrokerFactory` / `Client.Broker()` lazy accessor
   (import `_ "github.com/tonymontanov/go-bybit/v2/broker"` or any broker import)
+- **`affiliate/` (new profile, C5)** — Bybit V5 affiliate / referral REST:
+  - `GetAffiliateUserList` — `/v5/affiliate/aff-user-list`
+  - `GetAffiliateUserInfo` — `/v5/user/aff-customer-info`
+  - `GetFriendReferrals` — `/v5/user/invitation/referrals`
+  - `affiliate/types/` — domain types
+  - `examples/affiliate-user-list` — read-only smoke test
+- **Root client** — `RegisterAffiliateFactory` / `Client.Affiliate()` lazy accessor
+  (import `_ "github.com/tonymontanov/go-bybit/v2/affiliate"` or any affiliate import)
 
 ### Changed
 

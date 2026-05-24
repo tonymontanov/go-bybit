@@ -29,6 +29,7 @@ import (
 	"github.com/shopspring/decimal"
 	bybit "github.com/tonymontanov/go-bybit/v2"
 	"github.com/tonymontanov/go-bybit/v2/account"
+	"github.com/tonymontanov/go-bybit/v2/affiliate"
 	"github.com/tonymontanov/go-bybit/v2/asset"
 	"github.com/tonymontanov/go-bybit/v2/broker"
 	"github.com/tonymontanov/go-bybit/v2/linears"
@@ -205,6 +206,22 @@ func NewBrokerClient(opt Options) (*bybit.Client, *broker.Client) {
 	}
 	var bc *broker.Client = client.Broker().(*broker.Client)
 	return client, bc
+}
+
+// NewAffiliateClient mirrors NewBrokerClient but returns affiliate.Client.
+func NewAffiliateClient(opt Options) (*bybit.Client, *affiliate.Client) {
+	var cfg bybit.Config = bybit.DefaultConfig()
+	cfg.APIKey = opt.APIKey
+	cfg.SecretKey = opt.APISecret
+	cfg.Testnet = opt.Testnet
+	cfg.Demo = opt.Demo
+
+	var client, err = bybit.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("bybit.NewClient: %v", err)
+	}
+	var ac *affiliate.Client = client.Affiliate().(*affiliate.Client)
+	return client, ac
 }
 
 // Classify renders any error as "[kind retCode=… status=…] message: cause".

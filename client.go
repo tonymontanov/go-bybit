@@ -60,6 +60,9 @@ type Client struct {
 
 	brokerOnce sync.Once
 	brokerVal  any
+
+	affiliateOnce sync.Once
+	affiliateVal  any
 }
 
 // NewClient validates cfg, fills defaults, and returns a configured root
@@ -255,6 +258,29 @@ func (c *Client) Broker() any {
 		c.brokerVal = brokerFactory(c)
 	})
 	return c.brokerVal
+}
+
+// affiliateFactory is set by affiliate.init() via RegisterAffiliateFactory.
+var affiliateFactory func(c *Client) any
+
+// RegisterAffiliateFactory wires the affiliate.Client builder. Idempotent.
+func RegisterAffiliateFactory(f func(c *Client) any) {
+	if affiliateFactory == nil {
+		affiliateFactory = f
+	}
+}
+
+// Affiliate returns the *affiliate.Client (typed as any). nil when the
+// affiliate package has not been imported.
+func (c *Client) Affiliate() any {
+	c.affiliateOnce.Do(func() {
+		if affiliateFactory == nil {
+			c.logger.Warn(`bybit.Client.Affiliate: affiliate factory is not registered; import _ "github.com/tonymontanov/go-bybit/v2/affiliate"`)
+			return
+		}
+		c.affiliateVal = affiliateFactory(c)
+	})
+	return c.affiliateVal
 }
 
 // Compile-time assertion: *Error implements the error interface.
