@@ -18,7 +18,7 @@ Inverse and option categories remain out of scope.
 | M0 internal/auth (HMAC-SHA256 hex for REST + WS) | done | canonical-vector + property tests |
 | M0 internal/rest (V5 envelope, X-BAPI-* headers, observers) | done | httptest-based tests |
 | M0 internal/ws (auth, app-ping, reconnect+jitter, resubscribe, dispatch) | done | mock-server tests |
-| **M1** `linears/` REST core (Trading / Account / MarketData) | done | CreateOrder / Modify / Cancel / Batch\* / CancelAll / CancelForgotten / GetOpenOrders / GetPosition / GetWalletBalance / SetLeverage / SetPositionMode / ClosePosition / GetSymbolInfo / GetOrderBook / GetHistoricalCandles + httptest contract tests |
+| **M1** `linears/` REST core (Trading / Account / MarketData) | done | CreateOrder / Modify / Cancel / Batch\* / CancelAll / CancelForgotten / GetOpenOrders / GetPosition / GetWalletBalance / SetLeverage / SetPositionMode / ClosePosition / GetSymbolInfo / GetOrderBook / GetHistoricalCandles / GetFundingRateHistory / GetOpenInterest + httptest contract tests |
 | **M2** `orderbook/` engine (snapshot + delta + u/seq + resync) | done | sequence + service-restart gap detection (no CRC32 — Bybit does not ship one) |
 | **M3** `linears/stream.go` (WS subscriptions) | done | public: WatchOrderBook (engine-backed) / WatchTicker (delta merge) / WatchTrades / WatchKline; private: WatchOrders / WatchPositions / WatchExecutions / WatchWallet; mock-WS tests for all paths |
 | **M4** errors mapping + examples | done | extended `MapBybitCode` (10009/10017/10029/110003/110004/110009/110012/110020/110025/110052/170140) with table-driven tests; `examples/` for marketdata, signed trade, WS orderbook |
@@ -27,8 +27,9 @@ Inverse and option categories remain out of scope.
 | **v2.0** `spot/` profile | done | Trading / Account / MarketData / Stream mirroring `linears/`; UTA-only batch + private streams; `internal/v5common` shared helpers; orderbook engine decoupled from profile types |
 | **v2.1** shared `types/` (layered model) | done | new top-level `types/` holds protocol-common domain types; `linears/types` and `spot/types` become alias re-exports + profile-specific types — eliminates parallel copy-paste, non-breaking |
 | **v2.5** `asset/` profile (C1) | done | coin info, internal transfers, deposit/withdraw REST; examples/asset-coin-info |
-| **v2.5** `account/` profile (C2) | in progress | UTA info, fee rate, transaction log, collateral/borrow, greeks, margin settings |
-| **v2.5** broader API coverage | planned | broker / referral / pre-market / market extended |
+| **v2.5** `account/` profile (C2) | done | UTA info, fee rate, transaction log, collateral/borrow, greeks, margin settings |
+| **v2.5** `linears/` market extended (C3) | in progress | funding rate history, open interest REST |
+| **v2.5** broader API coverage | planned | broker / referral / pre-market |
 
 ## Quick start
 

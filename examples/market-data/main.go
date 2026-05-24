@@ -10,6 +10,8 @@ COVERAGE:
   - linears.MarketData().GetSymbolInfo
   - linears.MarketData().GetOrderBook        (snapshot)
   - linears.MarketData().GetHistoricalCandles (1m, last 5)
+  - linears.MarketData().GetFundingRateHistory (last rate)
+  - linears.MarketData().GetOpenInterest       (5m, last 2 samples)
 
 NOTES:
   - Bybit V5 only accepts orderbook depth from {1, 50, 200, 500}; the
@@ -52,6 +54,8 @@ func main() {
 	// printRows caps the on-screen output regardless of returned depth.
 	dumpOrderBook(ctx, lc, opt.Symbol, 1, 10)
 	dumpCandles(ctx, lc, opt.Symbol, types.Timeframe1m, 5)
+	dumpFundingHistory(ctx, lc, opt.Symbol)
+	dumpOpenInterest(ctx, lc, opt.Symbol)
 }
 
 func dumpSymbolInfo(ctx context.Context, lc *linears.Client, symbol string) {
@@ -126,6 +130,48 @@ func dumpCandles(ctx context.Context, lc *linears.Client, symbol string, tf type
 		fmt.Printf("  %s  O=%s  H=%s  L=%s  C=%s  V=%s\n",
 			t.UTC().Format("2006-01-02 15:04:05"),
 			c.Open, c.High, c.Low, c.Close, c.Volume)
+	}
+	fmt.Println()
+}
+
+func dumpFundingHistory(ctx context.Context, lc *linears.Client, symbol string) {
+	var hist, err = lc.MarketData().GetFundingRateHistory(ctx, types.FundingRateHistoryRequest{
+		Symbol: symbol,
+		Limit:  1,
+	})
+	if err != nil {
+		fmt.Printf("[funding-history] error: %s\n\n", exhelp.Classify(err))
+		return
+	}
+	fmt.Printf("[funding-history count=%d]\n", len(hist.Records))
+	if len(hist.Records) == 0 {
+		fmt.Println("  (empty)")
+		fmt.Println()
+		return
+	}
+	var row = hist.Records[0]
+	fmt.Printf("  %s rate=%s ts=%s\n\n",
+		row.Symbol, row.FundingRate,
+		time.UnixMilli(row.TimestampMs).UTC().Format("2006-01-02 15:04:05"))
+}
+
+func dumpOpenInterest(ctx context.Context, lc *linears.Client, symbol string) {
+	var hist, err = lc.MarketData().GetOpenInterest(ctx, types.OpenInterestRequest{
+		Symbol:       symbol,
+		IntervalTime: types.OpenInterestInterval5m,
+		Limit:        2,
+	})
+	if err != nil {
+		fmt.Printf("[open-interest] error: %s\n\n", exhelp.Classify(err))
+		return
+	}
+	fmt.Printf("[open-interest %s count=%d]\n", hist.Symbol, len(hist.Records))
+	var i int
+	for i = 0; i < len(hist.Records); i++ {
+		var row = hist.Records[i]
+		fmt.Printf("  OI=%s  ts=%s\n",
+			row.OpenInterest,
+			time.UnixMilli(row.TimestampMs).UTC().Format("2006-01-02 15:04:05"))
 	}
 	fmt.Println()
 }

@@ -35,6 +35,11 @@ documented in this file. The project follows [Semantic Versioning].
   - `examples/extended-account-info` — read-only smoke test
 - **Root client** — `RegisterAccountFactory` / `Client.Account()` lazy accessor
   (import `_ "github.com/tonymontanov/go-bybit/v2/account"` or any account import)
+- **`linears/` market extended (C3)**:
+  - `GetFundingRateHistory` — `/v5/market/funding/history`
+  - `GetOpenInterest` — `/v5/market/open-interest`
+  - `linears/types/` — `FundingRateHistory`, `OpenInterestHistory` domain types
+  - `examples/market-data` — extended with funding/OI dumps
 
 ### Changed
 

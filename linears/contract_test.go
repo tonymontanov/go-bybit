@@ -12,6 +12,8 @@ Coverage:
   - GetSymbolInfo NotFound: empty list returns ErrorKindInvalidRequest
   - GetOrderBook:           /v5/market/orderbook (depth clamping verified)
   - GetHistoricalCandles:   /v5/market/kline
+  - GetFundingRateHistory:  /v5/market/funding/history
+  - GetOpenInterest:        /v5/market/open-interest
   - GetWalletBalance:       /v5/account/wallet-balance
   - GetPosition:            /v5/position/list
   - GetOpenOrders:          /v5/order/realtime — single page
@@ -243,6 +245,96 @@ func TestContract_GetHistoricalCandles(t *testing.T) {
 	}
 	if !candles[1].Volume.Equal(dq("8.10")) {
 		t.Fatalf("Volume[1]: got %v", candles[1].Volume)
+	}
+}
+
+func TestContract_GetFundingRateHistory(t *testing.T) {
+	t.Parallel()
+	const fixture = `{
+		"retCode":0,"retMsg":"OK",
+		"result":{
+			"category":"linear",
+			"list":[{
+				"symbol":"ETHPERP",
+				"fundingRate":"0.0001",
+				"fundingRateTimestamp":"1672041600000"
+			}]
+		},
+		"retExtInfo":{},"time":0
+	}`
+	var _, client = mockBybit(t, map[string]string{
+		"/v5/market/funding/history": fixture,
+	})
+
+	var hist types.FundingRateHistory
+	var err error
+	hist, err = linearsOf(client).MarketData().GetFundingRateHistory(context.Background(), types.FundingRateHistoryRequest{
+		Symbol: "ETHPERP",
+		EndMs:  1672041600000,
+		Limit:  1,
+	})
+	if err != nil {
+		t.Fatalf("GetFundingRateHistory: %v", err)
+	}
+	if len(hist.Records) != 1 {
+		t.Fatalf("records: got %d", len(hist.Records))
+	}
+	if !hist.Records[0].FundingRate.Equal(dq("0.0001")) {
+		t.Fatalf("fundingRate: got %v", hist.Records[0].FundingRate)
+	}
+}
+
+func TestContract_GetFundingRateHistory_StartWithoutEnd(t *testing.T) {
+	t.Parallel()
+	var _, client = mockBybit(t, map[string]string{})
+
+	_, err := linearsOf(client).MarketData().GetFundingRateHistory(context.Background(), types.FundingRateHistoryRequest{
+		Symbol:  "BTCUSDT",
+		StartMs: 1672041600000,
+	})
+	if err == nil || !bybit.IsInvalidRequest(err) {
+		t.Fatalf("expected invalid request, got %v", err)
+	}
+}
+
+func TestContract_GetOpenInterest(t *testing.T) {
+	t.Parallel()
+	const fixture = `{
+		"retCode":0,"retMsg":"OK",
+		"result":{
+			"symbol":"BTCUSD",
+			"category":"inverse",
+			"list":[
+				{"openInterest":"461134384.00000000","timestamp":"1669571400000"},
+				{"openInterest":"461134292.00000000","timestamp":"1669571100000"}
+			],
+			"nextPageCursor":""
+		},
+		"retExtInfo":{},"time":0
+	}`
+	var _, client = mockBybit(t, map[string]string{
+		"/v5/market/open-interest": fixture,
+	})
+
+	var hist types.OpenInterestHistory
+	var err error
+	hist, err = linearsOf(client).MarketData().GetOpenInterest(context.Background(), types.OpenInterestRequest{
+		Symbol:       "BTCUSD",
+		IntervalTime: types.OpenInterestInterval5m,
+		StartMs:      1669571100000,
+		EndMs:        1669571400000,
+	})
+	if err != nil {
+		t.Fatalf("GetOpenInterest: %v", err)
+	}
+	if hist.Symbol != "BTCUSD" {
+		t.Fatalf("symbol: got %q", hist.Symbol)
+	}
+	if len(hist.Records) != 2 {
+		t.Fatalf("records: got %d", len(hist.Records))
+	}
+	if !hist.Records[0].OpenInterest.Equal(dq("461134384.00000000")) {
+		t.Fatalf("openInterest: got %v", hist.Records[0].OpenInterest)
 	}
 }
 

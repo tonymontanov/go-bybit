@@ -18,7 +18,7 @@ SUB-CLIENTS:
   - (*Client).Account()    : GetWalletBalance, GetPosition, GetOpenOrders,
     SetLeverage, SetPositionMode, ClosePosition.
   - (*Client).MarketData() : GetSymbolInfo, GetOrderBook,
-    GetHistoricalCandles.
+    GetHistoricalCandles, GetFundingRateHistory, GetOpenInterest.
   - (*Client).Stream()     : WatchOrderBook (engine-backed),
     WatchTicker (delta merging), WatchTrades, WatchKline, plus the
     private WatchOrders / WatchPositions / WatchExecutions / WatchWallet.

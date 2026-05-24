@@ -10,6 +10,8 @@ Implements:
   - GetSymbolInfo        : GET /v5/market/instruments-info
   - GetOrderBook         : GET /v5/market/orderbook
   - GetHistoricalCandles : GET /v5/market/kline
+  - GetFundingRateHistory: GET /v5/market/funding/history
+  - GetOpenInterest      : GET /v5/market/open-interest
 
 BYBIT V5 SPECIFICS:
   - /v5/market/orderbook depth limits (linear): 1, 50, 200, 500.
