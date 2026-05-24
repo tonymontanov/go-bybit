@@ -240,6 +240,16 @@ type rawTickerPush struct {
 }
 
 // WatchTicker subscribes to tickers.{symbol}.
+//
+// SPOT TOP-OF-BOOK CAVEAT:
+// Bybit V5 spot pushes on this topic do NOT include bid1Price /
+// ask1Price / bid1Size / ask1Size — see the WARNING in
+// spot/types/ticker-update.go. If you need best bid/ask on spot,
+// subscribe to WatchOrderBook(ctx, symbol, 1, 1, ...). For the
+// `tickers.{symbol}` topic specifically the SDK still parses those
+// fields if they ever appear in a frame (so callers don't break on
+// future Bybit changes), but in current production the corresponding
+// TickerUpdate fields stay zero on spot.
 func (s *StreamClient) WatchTicker(
 	ctx context.Context,
 	symbol string,
