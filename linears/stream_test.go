@@ -762,3 +762,114 @@ func TestStream_WatchWallet_ReusesRESTConverter(t *testing.T) {
 		t.Fatalf("wallet not delivered")
 	}
 }
+
+// ---------------------------------------------------------------------
+// Unsubscribe.
+// ---------------------------------------------------------------------
+
+// TestStream_Unsubscribe_SendsUnsubscribeFrame verifies that after a live
+// subscription Unsubscribe sends a Bybit V5 {"op":"unsubscribe"} frame for the
+// exact topic over the shared public connection (без Close всего сокета).
+func TestStream_Unsubscribe_SendsUnsubscribeFrame(t *testing.T) {
+	var gotUnsub = make(chan struct{}, 1)
+	var public *fakeWS = newFakeWS(t, func(s *fakeWS) {
+		if _, ok := s.readUntilOp("subscribe", 2*time.Second); !ok {
+			t.Errorf("did not see subscribe op")
+			return
+		}
+		_ = s.writeJSON(map[string]any{"op": "subscribe", "success": true, "conn_id": "C"})
+		// Пушим snapshot: клиент подтвердит, что сокет поднят и подписка жива,
+		// ДО того как мы отпишемся (иначе Unsubscribe на ещё-nil сокете лишь
+		// удалит топик из реестра, не отправив unsubscribe-фрейм).
+		_ = s.writeJSON(map[string]any{
+			"topic": "orderbook.50.BTCUSDT",
+			"type":  "snapshot",
+			"ts":    time.Now().UnixMilli(),
+			"data": map[string]any{
+				"s": "BTCUSDT",
+				"b": [][]string{{"60000", "1.0"}},
+				"a": [][]string{{"60001", "1.0"}},
+				"u": 1, "seq": 1,
+			},
+		})
+		if _, ok := s.readUntilOp("unsubscribe", 3*time.Second); ok {
+			select {
+			case gotUnsub <- struct{}{}:
+			default:
+			}
+		} else {
+			t.Errorf("did not see unsubscribe op")
+		}
+	})
+
+	var lc *Client = newStreamTestClient(t, public, nil)
+	var ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	var snaps = make(chan types.OrderBookSnapshot, 1)
+	if err := lc.Stream().WatchOrderBook(ctx, "BTCUSDT", 50, 5,
+		func(ob types.OrderBookSnapshot) {
+			select {
+			case snaps <- ob:
+			default:
+			}
+		},
+		func(err error) { t.Errorf("errHandler: %v", err) },
+	); err != nil {
+		t.Fatalf("WatchOrderBook: %v", err)
+	}
+
+	// Дожидаемся установления подписки (пришёл snapshot → сокет поднят).
+	select {
+	case <-snaps:
+	case <-time.After(3 * time.Second):
+		t.Fatal("subscription never established")
+	}
+
+	if err := lc.Stream().Unsubscribe("orderbook.50.BTCUSDT"); err != nil {
+		t.Fatalf("Unsubscribe: %v", err)
+	}
+
+	select {
+	case <-gotUnsub:
+	case <-time.After(3 * time.Second):
+		t.Fatal("server never received unsubscribe frame")
+	}
+}
+
+// TestStream_Unsubscribe_EmptyTopicRejected: пустой топик — ошибка валидации.
+func TestStream_Unsubscribe_EmptyTopicRejected(t *testing.T) {
+	var lc *Client = newStreamTestClient(t, nil, nil)
+	if err := lc.Stream().Unsubscribe(""); err == nil {
+		t.Fatal("expected error for empty topic")
+	}
+}
+
+// TestStream_Unsubscribe_NeverConnectedIsNoOp: Unsubscribe на стриме, который
+// ни разу не открывали, — идемпотентный no-op (без сети), и для public, и для
+// private маршрута.
+func TestStream_Unsubscribe_NeverConnectedIsNoOp(t *testing.T) {
+	var lc *Client = newStreamTestClient(t, nil, nil)
+	if err := lc.Stream().Unsubscribe("tickers.BTCUSDT"); err != nil {
+		t.Fatalf("public no-op unsubscribe: %v", err)
+	}
+	if err := lc.Stream().Unsubscribe("position"); err != nil {
+		t.Fatalf("private no-op unsubscribe: %v", err)
+	}
+}
+
+// TestIsPrivateLinearTopic фиксирует маршрутизацию топиков public↔private.
+func TestIsPrivateLinearTopic(t *testing.T) {
+	var privateTopics = []string{"order", "position", "execution", "wallet"}
+	for _, tp := range privateTopics {
+		if !isPrivateLinearTopic(tp) {
+			t.Errorf("topic %q должен считаться private", tp)
+		}
+	}
+	var publicTopics = []string{"tickers.BTCUSDT", "publicTrade.BTCUSDT", "orderbook.50.BTCUSDT", "kline.1.BTCUSDT"}
+	for _, tp := range publicTopics {
+		if isPrivateLinearTopic(tp) {
+			t.Errorf("topic %q должен считаться public", tp)
+		}
+	}
+}

@@ -11,6 +11,23 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
+## [v2.6.0] — 2026-07-02
+
+Additive, non-breaking: dynamic per-topic unsubscribe on the linear stream.
+Existing `Watch*`/`Close` APIs are unchanged.
+
+### Added
+
+- **`linears.StreamClient.Unsubscribe(topic string) error`** — cancels a single
+  live subscription and, if the socket is up, sends a Bybit V5
+  `{"op":"unsubscribe"}` frame so the server stops pushing that topic. Routes
+  public (`orderbook.*`, `tickers.*`, `publicTrade.*`, `kline.*`) vs private
+  (`order`, `position`, `execution`, `wallet`) topics to the correct
+  connection. Idempotent (unknown topic / not-yet-connected socket → no-op).
+  Complements `Watch*` for callers that multiplex many symbols over one
+  persistent connection and need per-symbol teardown without tearing down the
+  whole socket via `Close`.
+
 ## [v2.5.0] — 2026-05-24
 
 Part C — broader Bybit V5 API coverage on top of the stable v2.1 line
@@ -383,7 +400,8 @@ profiles are out of scope for v1.
 - `spot/` profile is reserved for a future milestone (`M5+`).
 
 [Semantic Versioning]: https://semver.org
-[Unreleased]: https://github.com/tonymontanov/go-bybit/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/tonymontanov/go-bybit/compare/v2.6.0...HEAD
+[v2.6.0]: https://github.com/tonymontanov/go-bybit/releases/tag/v2.6.0
 [v2.0.0]: https://github.com/tonymontanov/go-bybit/releases/tag/v2.0.0
 [v1.0.0]: https://github.com/tonymontanov/go-bybit/releases/tag/v1.0.0
 [v1.0.0-alpha.1]: https://github.com/tonymontanov/go-bybit/releases/tag/v1.0.0-alpha.1

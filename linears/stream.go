@@ -75,6 +75,45 @@ func (s *StreamClient) Close() error {
 	return nil
 }
 
+// Unsubscribe cancels a live subscription for topic and, if the owning WS
+// connection is open, sends a Bybit V5 {"op":"unsubscribe"} frame so the
+// server stops pushing that topic on the shared stream. It is the counterpart
+// of the Watch* methods for callers that multiplex many symbols over one
+// persistent connection and need to drop a single topic WITHOUT tearing down
+// the whole socket via Close — e.g. a per-symbol teardown on symbol hot-swap.
+//
+// Topic routing mirrors the Watch* methods:
+//   - public  (orderbook.*, tickers.*, publicTrade.*, kline.*) → public conn
+//   - private (order, position, execution, wallet)             → private conn
+//
+// Unsubscribe is idempotent: an unknown topic is a no-op (ws.Conn.Unsubscribe
+// tolerates it), and on a connection whose socket is not up the topic is
+// simply removed from the resubscribe registry so it is not re-sent on the
+// next reconnect. Bybit V5 supports dynamic unsubscription on both public and
+// private streams (see docs/v5/ws/connect).
+func (s *StreamClient) Unsubscribe(topic string) error {
+	if topic == "" {
+		return bybit.NewError(bybit.ErrorKindInvalidRequest, "", "stream.Unsubscribe: topic is empty", nil)
+	}
+	if isPrivateLinearTopic(topic) {
+		return s.c.privateConn().Unsubscribe(topic)
+	}
+	return s.c.publicConn().Unsubscribe(topic)
+}
+
+// isPrivateLinearTopic reports whether topic is one of the private linear
+// stream topics. Private topics are fixed names with no category/symbol
+// suffix; everything else (tickers.*, publicTrade.*, orderbook.*, kline.*)
+// is served on the public connection.
+func isPrivateLinearTopic(topic string) bool {
+	switch topic {
+	case "order", "position", "execution", "wallet":
+		return true
+	default:
+		return false
+	}
+}
+
 // =====================================================================
 // PUBLIC: orderbook (with local engine).
 // =====================================================================
