@@ -77,6 +77,10 @@ const (
 	// TimeInForcePostOnly — post-only (rejected if it would cross the
 	// book). Maps to orderType=Limit + timeInForce=PostOnly on the wire.
 	TimeInForcePostOnly TimeInForceType = "PostOnly"
+	// TimeInForceRPI — Retail Price Improvement. Post-only maker order
+	// that matches only non-algorithmic (Web/App) takers. Assigned
+	// market makers / symbols with RPI permission. Wire value "RPI".
+	TimeInForceRPI TimeInForceType = "RPI"
 )
 
 // OrderStatus — base order states that every Bybit V5 category emits

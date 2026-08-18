@@ -70,6 +70,8 @@ const (
 	// TimeInForcePostOnly — post-only (rejected if it would cross the
 	// book). Maps to orderType=Limit + timeInForce=PostOnly on the wire.
 	TimeInForcePostOnly = commontypes.TimeInForcePostOnly
+	// TimeInForceRPI — Retail Price Improvement. See commontypes.TimeInForceRPI.
+	TimeInForceRPI = commontypes.TimeInForceRPI
 )
 
 // PositionIdx — Bybit V5 uses a numeric position index that matters

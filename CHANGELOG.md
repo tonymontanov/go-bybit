@@ -11,6 +11,17 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
+## [v2.6.1] — 2026-08-18
+
+Additive, non-breaking: Retail Price Improvement TimeInForce.
+
+### Added
+
+- **`types.TimeInForceRPI = "RPI"`** — Bybit V5 Retail Price Improvement
+  maker TIF (post-only, matches Web/App takers only). Re-exported from
+  `linears/types` and `spot/types`. Place-order already forwards
+  `timeInForce` verbatim, so no trading-path change.
+
 ## [v2.6.0] — 2026-07-02
 
 Additive, non-breaking: dynamic per-topic unsubscribe on the linear stream.

@@ -73,6 +73,8 @@ const (
 	// TimeInForcePostOnly — post-only (rejected if it would cross the
 	// book). Maps to orderType=Limit + timeInForce=PostOnly on the wire.
 	TimeInForcePostOnly = commontypes.TimeInForcePostOnly
+	// TimeInForceRPI — Retail Price Improvement. See commontypes.TimeInForceRPI.
+	TimeInForceRPI = commontypes.TimeInForceRPI
 )
 
 // OrderStatus — Bybit V5 spot order state. Re-exports the common
