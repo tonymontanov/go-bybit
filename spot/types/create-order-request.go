@@ -26,6 +26,11 @@ FIELDS:
   - ClientOrderID  — Bybit `orderLinkId` (≤ 36 chars, [A-Za-z0-9_.-]).
   - MarketUnit     — only used for Market orders, see MarketUnit constants.
   - IsLeverage     — UTA margin-spot flag (false = cash spot).
+  - RPITakerAccess — rpiTakerAccess flag: the order is eligible to match
+                     against RPI (Retail Price Improvement) quotes.
+                     Production-only feature with symbol-level permission;
+                     the key is emitted only when true, so accounts
+                     without RPI taker access are unaffected.
 
 INVARIANTS:
   - Quantity > 0 always; the SDK validates locally.
@@ -57,13 +62,14 @@ const (
 
 // CreateOrderRequest — order creation request for the spot category.
 type CreateOrderRequest struct {
-	Symbol        string
-	Side          SideType
-	OrderType     OrderType
-	TimeInForce   TimeInForceType
-	Quantity      decimal.Decimal
-	Price         decimal.Decimal
-	ClientOrderID string
-	MarketUnit    MarketUnit
-	IsLeverage    bool
+	Symbol         string
+	Side           SideType
+	OrderType      OrderType
+	TimeInForce    TimeInForceType
+	Quantity       decimal.Decimal
+	Price          decimal.Decimal
+	ClientOrderID  string
+	MarketUnit     MarketUnit
+	IsLeverage     bool
+	RPITakerAccess bool
 }

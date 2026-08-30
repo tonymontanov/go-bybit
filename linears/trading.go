@@ -814,6 +814,11 @@ func (t *TradingClient) buildCreateOrderBody(req types.CreateOrderRequest) (map[
 	if req.CloseOnTrigger {
 		body["closeOnTrigger"] = true
 	}
+	// rpiTakerAccess is emitted only when true: RPI taker access is a
+	// symbol-level permission, absent-key keeps legacy behaviour intact.
+	if req.RPITakerAccess {
+		body["rpiTakerAccess"] = true
+	}
 	return body, nil
 }
 

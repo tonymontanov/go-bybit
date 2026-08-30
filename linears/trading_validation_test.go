@@ -136,6 +136,42 @@ func TestBuildCreateOrderBody_HappyPath_Limit(t *testing.T) {
 	}
 }
 
+func TestBuildCreateOrderBody_RPITakerAccess(t *testing.T) {
+	t.Parallel()
+	var trader *TradingClient = newTradingClient(nil)
+
+	var body, err = trader.buildCreateOrderBody(types.CreateOrderRequest{
+		Symbol:         "BTCUSDT",
+		Side:           types.SideTypeBuy,
+		OrderType:      types.OrderTypeLimit,
+		TimeInForce:    types.TimeInForceIOC,
+		Quantity:       dq("0.001"),
+		Price:          dq("27000"),
+		RPITakerAccess: true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := body["rpiTakerAccess"]; got != true {
+		t.Fatalf("rpiTakerAccess: got %v, want true", got)
+	}
+
+	body, err = trader.buildCreateOrderBody(types.CreateOrderRequest{
+		Symbol:      "BTCUSDT",
+		Side:        types.SideTypeBuy,
+		OrderType:   types.OrderTypeLimit,
+		TimeInForce: types.TimeInForceIOC,
+		Quantity:    dq("0.001"),
+		Price:       dq("27000"),
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := body["rpiTakerAccess"]; ok {
+		t.Fatalf("rpiTakerAccess key must be absent when the flag is false, got %v", body)
+	}
+}
+
 func TestBuildCreateOrderBody_Market_NoPriceKey(t *testing.T) {
 	t.Parallel()
 	var trader *TradingClient = newTradingClient(nil)
@@ -319,4 +355,3 @@ func TestNormalizeRejectReason(t *testing.T) {
 		}
 	}
 }
-

@@ -11,6 +11,21 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
+## [v2.7.0] — 2026-08-30
+
+Additive, non-breaking: RPI taker access on order placement.
+
+### Added
+
+- **`CreateOrderRequest.RPITakerAccess bool`** (linears + spot) — emits
+  `rpiTakerAccess: true` in the `/v5/order/create` body, making the order
+  eligible to match against RPI (Retail Price Improvement) quotes. The
+  wire key is emitted only when the flag is `true`, so existing callers
+  and accounts without RPI taker access see zero behaviour change. Batch
+  create (`/v5/order/create-batch`) inherits the field automatically via
+  the shared body builder. Amend is untouched: Bybit documents
+  `rpiTakerAccess` for Place Order / SBE Order Entry only.
+
 ## [v2.6.1] — 2026-08-18
 
 Additive, non-breaking: Retail Price Improvement TimeInForce.

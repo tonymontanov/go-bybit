@@ -780,6 +780,11 @@ func (t *TradingClient) buildCreateOrderBody(req bybitspottypes.CreateOrderReque
 		// Bybit V5 expects the integer 1 for margin spot in UTA.
 		body["isLeverage"] = 1
 	}
+	// rpiTakerAccess is emitted only when true: RPI taker access is a
+	// symbol-level permission, absent-key keeps legacy behaviour intact.
+	if req.RPITakerAccess {
+		body["rpiTakerAccess"] = true
+	}
 	return body, nil
 }
 

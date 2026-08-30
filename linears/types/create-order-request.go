@@ -30,6 +30,11 @@ FIELDS:
                      wrong value yields retCode 110017.
   - ReduceOnly     — reduceOnly flag.
   - CloseOnTrigger — closeOnTrigger flag (used by liquidation flows).
+  - RPITakerAccess — rpiTakerAccess flag: the order is eligible to match
+                     against RPI (Retail Price Improvement) quotes.
+                     Production-only feature with symbol-level permission;
+                     the key is emitted only when true, so accounts
+                     without RPI taker access are unaffected.
 
 INVARIANTS:
   - Quantity > 0 always; the SDK validates and surfaces InvalidRequest
@@ -53,4 +58,5 @@ type CreateOrderRequest struct {
 	PositionIdx    PositionIdx
 	ReduceOnly     bool
 	CloseOnTrigger bool
+	RPITakerAccess bool
 }

@@ -168,6 +168,42 @@ func TestBuildCreateOrderBody_HappyPath_MarketBuyQuoteCoin(t *testing.T) {
 	}
 }
 
+func TestBuildCreateOrderBody_RPITakerAccess(t *testing.T) {
+	t.Parallel()
+	var trader *TradingClient = newTradingClient(nil)
+
+	var body, err = trader.buildCreateOrderBody(bybitspottypes.CreateOrderRequest{
+		Symbol:         "BTCUSDT",
+		Side:           bybitspottypes.SideTypeBuy,
+		OrderType:      bybitspottypes.OrderTypeLimit,
+		TimeInForce:    bybitspottypes.TimeInForceIOC,
+		Quantity:       dq("0.001"),
+		Price:          dq("27000"),
+		RPITakerAccess: true,
+	})
+	if err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	if got := body["rpiTakerAccess"]; got != true {
+		t.Fatalf("rpiTakerAccess: got %v, want true", got)
+	}
+
+	body, err = trader.buildCreateOrderBody(bybitspottypes.CreateOrderRequest{
+		Symbol:      "BTCUSDT",
+		Side:        bybitspottypes.SideTypeBuy,
+		OrderType:   bybitspottypes.OrderTypeLimit,
+		TimeInForce: bybitspottypes.TimeInForceIOC,
+		Quantity:    dq("0.001"),
+		Price:       dq("27000"),
+	})
+	if err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	if _, ok := body["rpiTakerAccess"]; ok {
+		t.Fatalf("rpiTakerAccess key must be absent when the flag is false, got %v", body)
+	}
+}
+
 func TestBuildCreateOrderBody_IsLeverageMargin(t *testing.T) {
 	t.Parallel()
 	var trader *TradingClient = newTradingClient(nil)
@@ -319,10 +355,10 @@ func TestClampOrderbookDepth_Spot(t *testing.T) {
 		want int
 	}
 	var cases []tc = []tc{
-		{0, 50},   // default for ≤0
-		{-5, 50},  // default for ≤0
-		{1, 1},    // exact
-		{30, 50},  // clamps up
+		{0, 50},  // default for ≤0
+		{-5, 50}, // default for ≤0
+		{1, 1},   // exact
+		{30, 50}, // clamps up
 		{200, 200},
 		{500, 200}, // clamps down to 200 (spot max)
 	}
