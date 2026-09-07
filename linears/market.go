@@ -319,8 +319,15 @@ func convertSymbolInfo(src instrumentsEntry) types.SymbolInfo {
 		MinLeverage:       dec(src.LeverageFilter.MinLeverage),
 		MaxLeverage:       dec(src.LeverageFilter.MaxLeverage),
 		LeverageStep:      dec(src.LeverageFilter.LeverageStep),
-		PricePrecision:    -tick.Exponent(),
-		QuantityPrecision: -step.Exponent(),
+		// PricePrecision keeps Bybit's own scale: tickSize "0.10" means
+		// prices are quoted with two decimals (priceScale=2), and callers
+		// rely on that for formatting.
+		PricePrecision: -tick.Exponent(),
+		// QuantityPrecision goes through v5common.Precision, not
+		// -Exponent(): an integer step such as qtyStep="10" (IRYSUSDT,
+		// 2026-09-07) parses with exponent 0 and would report "whole
+		// units" where Bybit demands multiples of ten.
+		QuantityPrecision: v5common.Precision(step),
 	}
 }
 

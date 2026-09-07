@@ -36,6 +36,11 @@ FIELDS:
   - LeverageStep      — leverage granularity.
   - PricePrecision    — number of decimal places in TickSize (derived).
   - QuantityPrecision — number of decimal places in QtyStep (derived).
+    Negative for integer power-of-ten steps: qtyStep "10" → -1, "100" → -2
+    (round to tens/hundreds). Bybit silently truncates a non-compliant qty
+    to the step and only then checks minNotionalValue, so a caller that
+    rounds to whole units on a qtyStep=10 symbol gets retCode 110094 on
+    orders sized right at the minimum.
 */
 
 package types
