@@ -11,6 +11,10 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
+## [v2.7.1] — 2026-09-07
+
+Bug fix, non-breaking: quantity precision on integer lot steps.
+
 ### Fixed
 
 - **`SymbolInfo.QuantityPrecision` for integer steps** (linears + spot;
