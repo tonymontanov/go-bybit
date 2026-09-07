@@ -31,7 +31,8 @@ FIELDS:
   - MarginTrading     — see MarginTrading enum.
   - Innovation        — true when the symbol is in Bybit's Innovation zone.
   - PricePrecision    — derived from TickSize (decimal places).
-  - QuantityPrecision — derived from BasePrecision (decimal places).
+  - QuantityPrecision — derived from BasePrecision (decimal places;
+    negative for integer power-of-ten steps, see linears SymbolInfo).
 */
 
 package types

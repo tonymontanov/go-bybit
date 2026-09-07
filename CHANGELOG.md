@@ -11,6 +11,21 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
+### Fixed
+
+- **`SymbolInfo.QuantityPrecision` for integer steps** (linears + spot;
+  `PricePrecision` is unchanged and still mirrors Bybit's price scale). The values were `-step.Exponent()`, and
+  shopspring parses `"10"` with exponent 0, so a symbol with
+  `qtyStep=10` reported precision 0 ("whole units") instead of -1
+  ("tens"). A caller rounding to that precision sent 332 where Bybit
+  accepts 330/340; Bybit truncates to the step silently and applies
+  `minNotionalValue` afterwards, turning a 5.00 USDT order into
+  `110094 Order does not meet minimum order value 5USDT` (IRYSUSDT
+  linear, 2026-09-07). Precision is now derived from the normalised
+  step via `internal/v5common.Precision`: `"10"` → -1, `"100"` → -2,
+  `"0.0010"` → 3. Fractional steps without trailing zeros are
+  unchanged.
+
 ## [v2.7.0] — 2026-08-30
 
 Additive, non-breaking: RPI taker access on order placement.

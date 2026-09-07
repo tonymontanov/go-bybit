@@ -296,23 +296,25 @@ func convertSymbolInfo(src spotInstrumentsEntry) bybitspottypes.SymbolInfo {
 	var tick = dec(src.PriceFilter.TickSize)
 	var basePrec = dec(src.LotSizeFilter.BasePrecision)
 	return bybitspottypes.SymbolInfo{
-		Symbol:            src.Symbol,
-		BaseCoin:          src.BaseCoin,
-		QuoteCoin:         src.QuoteCoin,
-		Status:            src.Status,
-		TickSize:          tick,
-		MinPrice:          dec(src.PriceFilter.MinPrice),
-		MaxPrice:          dec(src.PriceFilter.MaxPrice),
-		BasePrecision:     basePrec,
-		QuotePrecision:    dec(src.LotSizeFilter.QuotePrecision),
-		MinOrderQty:       dec(src.LotSizeFilter.MinOrderQty),
-		MaxOrderQty:       dec(src.LotSizeFilter.MaxOrderQty),
-		MinOrderAmt:       dec(src.LotSizeFilter.MinOrderAmt),
-		MaxOrderAmt:       dec(src.LotSizeFilter.MaxOrderAmt),
-		MarginTrading:     bybitspottypes.MarginTrading(src.MarginTrading),
-		Innovation:        src.Innovation == "1",
-		PricePrecision:    -tick.Exponent(),
-		QuantityPrecision: -basePrec.Exponent(),
+		Symbol:         src.Symbol,
+		BaseCoin:       src.BaseCoin,
+		QuoteCoin:      src.QuoteCoin,
+		Status:         src.Status,
+		TickSize:       tick,
+		MinPrice:       dec(src.PriceFilter.MinPrice),
+		MaxPrice:       dec(src.PriceFilter.MaxPrice),
+		BasePrecision:  basePrec,
+		QuotePrecision: dec(src.LotSizeFilter.QuotePrecision),
+		MinOrderQty:    dec(src.LotSizeFilter.MinOrderQty),
+		MaxOrderQty:    dec(src.LotSizeFilter.MaxOrderQty),
+		MinOrderAmt:    dec(src.LotSizeFilter.MinOrderAmt),
+		MaxOrderAmt:    dec(src.LotSizeFilter.MaxOrderAmt),
+		MarginTrading:  bybitspottypes.MarginTrading(src.MarginTrading),
+		Innovation:     src.Innovation == "1",
+		PricePrecision: -tick.Exponent(),
+		// Via v5common.Precision, not -Exponent(): see linears/market.go —
+		// an integer basePrecision needs normalising first.
+		QuantityPrecision: v5common.Precision(basePrec),
 	}
 }
 
