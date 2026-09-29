@@ -21,7 +21,8 @@ FIELDS:
   - Asks       — sell levels, sorted ascending by price.
   - UpdateID   — Bybit "u" — book sequence number.
   - SeqID      — Bybit "seq" — symbol-wide sequence (snapshots only).
-  - TsMs       — Bybit publish timestamp (ms).
+  - TsMs       — Bybit publish timestamp (ms): the WS envelope "ts" of
+                 the push (local receive time if the frame has none).
 */
 
 package types

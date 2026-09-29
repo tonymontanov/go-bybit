@@ -112,8 +112,9 @@ func (s *StreamClient) WatchOrderBook(
 	var sub *ws.Subscription = &ws.Subscription{
 		Topic: topic,
 		Reset: func() { eng.MarkResynced(0, 0, 0) },
-		Handler: func(_, pushType string, payload []byte) {
-			s.applyOrderbookFrame(eng, pushType, payload, handler, errHandler, displayDepth)
+		TimedHandler: func(_, pushType string, tsMs int64, payload []byte) {
+			// tsMs is the envelope "ts" (receive time if absent).
+			s.applyOrderbookFrame(eng, pushType, tsMs, payload, handler, errHandler, displayDepth)
 		},
 	}
 	s.c.publicConn().Start(ctx)
@@ -128,9 +129,11 @@ func (s *StreamClient) WatchOrderBook(
 
 // applyOrderbookFrame decodes one Bybit V5 orderbook push and routes it
 // into the engine. Snapshot/delta routing matches the linears profile.
+// tsMs (the frame time) becomes OrderBookSnapshot.TsMs.
 func (s *StreamClient) applyOrderbookFrame(
 	eng *orderbook.Engine,
 	pushType string,
+	tsMs int64,
 	payload []byte,
 	handler func(bybitspottypes.OrderBookSnapshot),
 	errHandler func(error),
@@ -178,6 +181,7 @@ func (s *StreamClient) applyOrderbookFrame(
 		Asks:     toSpotLevels(topAsks),
 		UpdateID: eng.LastUpdateID(),
 		SeqID:    eng.LastSeqID(),
+		TsMs:     tsMs,
 	})
 }
 
@@ -267,7 +271,7 @@ func (s *StreamClient) WatchTicker(
 		Reset: func() {
 			merged = bybitspottypes.TickerUpdate{Symbol: symbol}
 		},
-		Handler: func(_, pushType string, payload []byte) {
+		TimedHandler: func(_, pushType string, tsMs int64, payload []byte) {
 			var push rawTickerPush
 			if err := codec.Unmarshal(payload, &push); err != nil {
 				s.c.logger().Warn("stream.WatchTicker: parse", bybit.Str("symbol", symbol), bybit.Err(err))
@@ -277,6 +281,9 @@ func (s *StreamClient) WatchTicker(
 				merged = bybitspottypes.TickerUpdate{Symbol: symbol}
 			}
 			mergeTickerUpdate(&merged, push)
+			// The ticker data has no timestamp of its own: the time of
+			// this push is the envelope "ts" (receive time if absent).
+			merged.TsMs = tsMs
 			handler(merged)
 		},
 	}
