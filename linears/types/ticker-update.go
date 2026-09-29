@@ -20,7 +20,9 @@ FIELDS:
   - FundingRate                : current funding rate.
   - NextFundingTimeMs          : timestamp of the next funding event.
   - OpenInterest / OpenInterestValue : aggregate open interest.
-  - TsMs                       : Bybit publish timestamp (ms).
+  - TsMs                       : Bybit publish timestamp (ms): the WS
+                                 envelope "ts" of the push (local receive
+                                 time if the frame has none), never 0 on WS.
 */
 
 package types

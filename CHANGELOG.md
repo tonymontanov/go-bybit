@@ -37,6 +37,17 @@ Demo Trading.
   the production hosts.
 - **Testnet + Demo together** resolve REST and WS from one environment
   (testnet); previously REST went to demo and WS to testnet.
+- **WS tickers and orderbook snapshots carry the publish time**
+  (linears + spot). `TickerUpdate.TsMs` and `OrderBookSnapshot.TsMs`
+  were always 0 on the WS path: the dispatcher handed a subscription
+  only topic / type / data and dropped the envelope `ts`. The internal
+  `ws.Subscription` gains an optional `TimedHandler` that receives the
+  frame time — the envelope `ts`, or the local receive time when a frame
+  has none, never 0 — and `WatchTicker` / `WatchOrderBook` fill `TsMs`
+  from it. Public signatures are unchanged; `Handler`-based
+  subscriptions (trades, klines, private channels) work as before.
+  Callers that used `TsMs` as the price time saw 0 (the trading core
+  dropped every market-data snapshot of Bybit linears, 2026-09-29).
 
 ## [v2.7.1] — 2026-09-07
 

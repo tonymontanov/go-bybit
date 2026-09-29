@@ -96,6 +96,12 @@ type Subscription struct {
 	// Push frames whose data field is missing or null still call the
 	// handler with payload=nil — handlers must be defensive.
 	Handler func(topic, pushType string, payload []byte)
+	// TimedHandler — the same as Handler plus tsMs: the envelope "ts"
+	// (Bybit publish time, ms) or, when the frame carries none, the local
+	// receive time, so it is never zero. When set it is called INSTEAD of
+	// Handler (one of the two is required). Public streams whose data has
+	// no timestamp of its own (tickers, orderbook) use it to fill TsMs.
+	TimedHandler func(topic, pushType string, tsMs int64, payload []byte)
 	// Reset is called once before every (re)subscribe. Used by the
 	// orderbook engine to drop any local state so the next snapshot
 	// pushed by the server is treated as the new authoritative state.
@@ -215,7 +221,7 @@ func (c *Conn) Start(ctx context.Context) {
 // subscribe op immediately. Otherwise the subscription waits in the
 // registry and is sent automatically on the next successful (re)connect.
 func (c *Conn) Subscribe(sub *Subscription) error {
-	if sub == nil || sub.Topic == "" || sub.Handler == nil {
+	if sub == nil || sub.Topic == "" || (sub.Handler == nil && sub.TimedHandler == nil) {
 		return bberr.New(bberr.ErrorKindInvalidRequest, "", "ws: invalid subscription", nil)
 	}
 	c.mu.Lock()
@@ -510,8 +516,22 @@ func (c *Conn) readLoop(ctx context.Context, socket *websocket.Conn) error {
 			c.cDropped.Inc()
 			continue
 		}
-		sub.Handler(env.Topic, env.Type, env.Data)
+		if sub.TimedHandler != nil {
+			sub.TimedHandler(env.Topic, env.Type, frameTimeMs(&env), env.Data)
+		} else {
+			sub.Handler(env.Topic, env.Type, env.Data)
+		}
 	}
+}
+
+// frameTimeMs returns the envelope "ts" (Bybit publish time, ms) or, when
+// the frame has none, the local receive time — never zero, so callers can
+// use it as the event time of a push without a zero check.
+func frameTimeMs(env *Envelope) int64 {
+	if env.TsMs > 0 {
+		return env.TsMs
+	}
+	return time.Now().UnixMilli()
 }
 
 // handleControl logs ack frames and counts authentication outcomes that

@@ -54,5 +54,7 @@ type TickerUpdate struct {
 	Volume24h     decimal.Decimal
 	Turnover24h   decimal.Decimal
 	UsdIndexPrice decimal.Decimal
-	TsMs          int64
+	// TsMs — Bybit publish timestamp (ms): the WS envelope "ts" of the
+	// push (local receive time if the frame has none), never 0 on WS.
+	TsMs int64
 }
