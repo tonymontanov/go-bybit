@@ -11,6 +11,33 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
+Bug fix, non-breaking for mainnet: endpoint resolution for Testnet /
+Demo Trading.
+
+### Fixed
+
+- **`Config.Demo` / `Config.Testnet` ignored when starting from
+  `DefaultConfig()`.** `DefaultConfig()` pre-fills every URL with the
+  production value, and `NewClient` switched only empty URL fields, so
+  `DefaultConfig()` + `Demo = true` (the pattern of
+  `examples/internal/exhelp` and of the desk connector) kept production
+  REST and the production private stream — demo keys against mainnet.
+  A URL still equal to the production default now counts as unset and
+  gets the environment default; explicit non-production URLs (mock
+  server, gateway) are kept verbatim.
+- **Demo Trading public WS stays on `wss://stream.bybit.com`** — pinned
+  by a test for every public category. Demo has only a private stream
+  (`wss://stream-demo.bybit.com/v5/private`); `stream-demo.bybit.com`
+  answers a handshake on `/v5/public/*` with 404 (seen by the caller as
+  `bad handshake`, i.e. no market data), per
+  https://bybit-exchange.github.io/docs/v5/demo.
+- **Testnet inverse / option public WS** now default to
+  `stream-testnet.bybit.com/v5/public/{inverse,option}` (new
+  `TestnetWsPublicInverseURL` / `TestnetWsPublicOptionURL`) instead of
+  the production hosts.
+- **Testnet + Demo together** resolve REST and WS from one environment
+  (testnet); previously REST went to demo and WS to testnet.
+
 ## [v2.7.1] — 2026-09-07
 
 Bug fix, non-breaking: quantity precision on integer lot steps.

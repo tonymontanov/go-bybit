@@ -6,14 +6,24 @@ Public SDK configuration — REST/WS endpoints, timeouts, reconnect policy,
 orderbook tuning, observer hooks. Default values match the production
 Bybit V5 endpoints and conservative HFT-friendly timeouts.
 
-ENDPOINTS (defaults):
+ENDPOINTS (defaults; Config.Testnet / Config.Demo pick the environment):
 
-  REST:    https://api.bybit.com
-  WS public  (linears): wss://stream.bybit.com/v5/public/linear
-  WS public  (spot):    wss://stream.bybit.com/v5/public/spot
-  WS public  (inverse): wss://stream.bybit.com/v5/public/inverse
-  WS public  (option):  wss://stream.bybit.com/v5/public/option
-  WS private:           wss://stream.bybit.com/v5/private
+  Mainnet:
+    REST:                 https://api.bybit.com
+    WS public (linears):  wss://stream.bybit.com/v5/public/linear
+    WS public (spot):     wss://stream.bybit.com/v5/public/spot
+    WS public (inverse):  wss://stream.bybit.com/v5/public/inverse
+    WS public (option):   wss://stream.bybit.com/v5/public/option
+    WS private:           wss://stream.bybit.com/v5/private
+
+  Testnet: the same paths on api-testnet.bybit.com (REST) and
+  stream-testnet.bybit.com (every public category and the private stream).
+
+  Demo Trading: REST https://api-demo.bybit.com, WS private
+  wss://stream-demo.bybit.com/v5/private. Demo has NO public stream of its
+  own — stream-demo.bybit.com answers a handshake on /v5/public/* with
+  404 — so the public WS stays on the production host stream.bybit.com
+  (https://bybit-exchange.github.io/docs/v5/demo).
 
 A SINGLE WS PRIVATE ENDPOINT serves every category (linear/spot/inverse/
 option) — auth is per-UID, not per-category, so we do not split it by
@@ -21,9 +31,11 @@ profile. The public endpoints differ per category, which is why the
 domain client (linears.Client / spot.Client) picks the right URL when it
 opens the public connection.
 
-TESTNET / DEMO are deferred to a later phase (see TS spec §3 and the
-project plan); the constants below are kept for reference and used only
-when Config.Testnet / Config.Demo flags are wired up.
+URL RESOLUTION (NewClient): a URL field that is empty, or still holds the
+production default DefaultConfig put there, gets the selected
+environment's default; any other value is an explicit override (mock
+server, custom gateway) and is kept verbatim. So Config{Demo: true} and
+DefaultConfig() with Demo = true resolve to the same demo endpoints.
 */
 
 package bybit
@@ -65,12 +77,19 @@ var (
 	// TestnetWsPublicSpotURL — testnet public WS for spot category.
 	TestnetWsPublicSpotURL string = "wss://stream-testnet.bybit.com/v5/public/spot"
 
+	// TestnetWsPublicInverseURL — testnet public WS for inverse category.
+	TestnetWsPublicInverseURL string = "wss://stream-testnet.bybit.com/v5/public/inverse"
+
+	// TestnetWsPublicOptionURL — testnet public WS for option category.
+	TestnetWsPublicOptionURL string = "wss://stream-testnet.bybit.com/v5/public/option"
+
 	// TestnetWsPrivateURL — testnet private WS.
 	TestnetWsPrivateURL string = "wss://stream-testnet.bybit.com/v5/private"
 
-	// DemoWsPrivateURL — Demo private WS. Note: Demo does NOT have a
-	// dedicated public stream — public market data is shared with
-	// production.
+	// DemoWsPrivateURL — Demo Trading private WS. Demo does NOT have a
+	// public stream: stream-demo.bybit.com answers /v5/public/* with 404,
+	// and public market data for demo accounts comes from the production
+	// hosts (DefaultWsPublic*URL).
 	DemoWsPrivateURL string = "wss://stream-demo.bybit.com/v5/private"
 )
 
@@ -113,18 +132,17 @@ type Config struct {
 	// nil → no-op.
 	RateLimitEventObserver func(RateLimitEvent)
 
-	// Testnet — switches default REST/WS hosts to testnet. Has no effect
-	// on URLs the user set explicitly. Default false.
-	//
-	// NOTE: This flag is implemented in the URL-defaulting layer in M0
-	// but the testnet/demo profiles are out of v1.0 scope per the
-	// project plan; integration tests against testnet are added in a
-	// later milestone.
+	// Testnet — switches the default REST host and every WS host (all
+	// public categories and the private stream) to testnet. URLs set
+	// explicitly to a non-production value are kept. Takes precedence
+	// over Demo when both are set. Default false.
 	Testnet bool
 
-	// Demo — switches default REST host to api-demo.bybit.com and the
-	// private WS host to stream-demo.bybit.com. Public WS is shared with
-	// production. Default false.
+	// Demo — switches the default REST host to api-demo.bybit.com and the
+	// private WS host to stream-demo.bybit.com. Public WS stays on the
+	// production host stream.bybit.com: Demo Trading has no public stream
+	// of its own. URLs set explicitly to a non-production value are kept.
+	// Default false.
 	Demo bool
 }
 
@@ -150,8 +168,10 @@ type RestConfig struct {
 // WsConfig — WebSocket transport parameters.
 type WsConfig struct {
 	// PublicLinearURL / PublicSpotURL / PublicInverseURL / PublicOptionURL /
-	// PrivateURL — endpoint URLs. Empty values pick the production /
-	// testnet / demo defaults based on Config.Testnet / Config.Demo.
+	// PrivateURL — endpoint URLs. Empty values, and values equal to the
+	// production defaults, resolve to the production / testnet / demo
+	// defaults based on Config.Testnet / Config.Demo (see the ENDPOINTS
+	// table at the top of this file).
 	PublicLinearURL  string
 	PublicSpotURL    string
 	PublicInverseURL string
@@ -204,7 +224,9 @@ type OrderbookConfig struct {
 // DefaultConfig returns a Config pre-populated with production endpoints
 // and HFT-friendly timeouts. Callers can override individual fields and
 // pass the result to NewClient — empty sub-fields fall back to these
-// defaults.
+// defaults. Setting Testnet / Demo on the result switches the endpoints
+// too: NewClient treats the production URLs left here as defaults, not as
+// explicit overrides.
 func DefaultConfig() Config {
 	return Config{
 		REST: RestConfig{
@@ -243,22 +265,17 @@ func DefaultConfig() Config {
 }
 
 // withDefaults returns a copy of c with empty fields filled from
-// DefaultConfig. Demo and Testnet flags switch the default endpoints
-// accordingly. NeverAlready-set explicit URLs are preserved.
+// DefaultConfig. The Testnet / Demo flags pick the environment whose
+// endpoints fill the URL fields; a URL still equal to the production
+// default counts as unset (see resolveEndpoint), so DefaultConfig() with
+// Demo = true resolves exactly like Config{Demo: true}. Explicit
+// non-production URLs are preserved.
 func (c Config) withDefaults() Config {
 	var def Config = DefaultConfig()
+	var env environmentEndpoints = endpointsFor(c.Testnet, c.Demo)
 
 	// REST.
-	var defRestBase string = def.REST.BaseURL
-	switch {
-	case c.Demo:
-		defRestBase = DemoRestBaseURL
-	case c.Testnet:
-		defRestBase = TestnetRestBaseURL
-	}
-	if c.REST.BaseURL == "" {
-		c.REST.BaseURL = defRestBase
-	}
+	c.REST.BaseURL = resolveEndpoint(c.REST.BaseURL, def.REST.BaseURL, env.rest)
 	if c.REST.RequestTimeout == 0 {
 		c.REST.RequestTimeout = def.REST.RequestTimeout
 	}
@@ -276,37 +293,11 @@ func (c Config) withDefaults() Config {
 	}
 
 	// WS.
-	var defLinear string = def.WS.PublicLinearURL
-	var defSpot string = def.WS.PublicSpotURL
-	var defInverse string = def.WS.PublicInverseURL
-	var defOption string = def.WS.PublicOptionURL
-	var defPrivate string = def.WS.PrivateURL
-	switch {
-	case c.Testnet:
-		defLinear = TestnetWsPublicLinearURL
-		defSpot = TestnetWsPublicSpotURL
-		// Inverse/option testnet hosts mirror production naming; we keep
-		// production defaults until a real testnet need arises.
-		defPrivate = TestnetWsPrivateURL
-	case c.Demo:
-		// Demo shares public WS with production; only private differs.
-		defPrivate = DemoWsPrivateURL
-	}
-	if c.WS.PublicLinearURL == "" {
-		c.WS.PublicLinearURL = defLinear
-	}
-	if c.WS.PublicSpotURL == "" {
-		c.WS.PublicSpotURL = defSpot
-	}
-	if c.WS.PublicInverseURL == "" {
-		c.WS.PublicInverseURL = defInverse
-	}
-	if c.WS.PublicOptionURL == "" {
-		c.WS.PublicOptionURL = defOption
-	}
-	if c.WS.PrivateURL == "" {
-		c.WS.PrivateURL = defPrivate
-	}
+	c.WS.PublicLinearURL = resolveEndpoint(c.WS.PublicLinearURL, def.WS.PublicLinearURL, env.publicLinear)
+	c.WS.PublicSpotURL = resolveEndpoint(c.WS.PublicSpotURL, def.WS.PublicSpotURL, env.publicSpot)
+	c.WS.PublicInverseURL = resolveEndpoint(c.WS.PublicInverseURL, def.WS.PublicInverseURL, env.publicInverse)
+	c.WS.PublicOptionURL = resolveEndpoint(c.WS.PublicOptionURL, def.WS.PublicOptionURL, env.publicOption)
+	c.WS.PrivateURL = resolveEndpoint(c.WS.PrivateURL, def.WS.PrivateURL, env.private)
 	if c.WS.HandshakeTimeout == 0 {
 		c.WS.HandshakeTimeout = def.WS.HandshakeTimeout
 	}
@@ -356,6 +347,67 @@ func (c Config) withDefaults() Config {
 	}
 
 	return c
+}
+
+// environmentEndpoints — the default REST/WS endpoints of one Bybit
+// environment (mainnet, testnet or Demo Trading).
+type environmentEndpoints struct {
+	rest          string
+	publicLinear  string
+	publicSpot    string
+	publicInverse string
+	publicOption  string
+	private       string
+}
+
+// endpointsFor returns the default endpoints of the environment selected
+// by the Testnet / Demo flags. Testnet takes precedence when both are set,
+// so REST and WS always come from the same environment.
+func endpointsFor(testnet bool, demo bool) environmentEndpoints {
+	switch {
+	case testnet:
+		return environmentEndpoints{
+			rest:          TestnetRestBaseURL,
+			publicLinear:  TestnetWsPublicLinearURL,
+			publicSpot:    TestnetWsPublicSpotURL,
+			publicInverse: TestnetWsPublicInverseURL,
+			publicOption:  TestnetWsPublicOptionURL,
+			private:       TestnetWsPrivateURL,
+		}
+	case demo:
+		// Demo Trading has only a private stream: stream-demo.bybit.com
+		// answers /v5/public/* with 404, so public market data stays on
+		// the production hosts. REST and private WS are demo-specific.
+		return environmentEndpoints{
+			rest:          DemoRestBaseURL,
+			publicLinear:  DefaultWsPublicLinearURL,
+			publicSpot:    DefaultWsPublicSpotURL,
+			publicInverse: DefaultWsPublicInverseURL,
+			publicOption:  DefaultWsPublicOptionURL,
+			private:       DemoWsPrivateURL,
+		}
+	default:
+		return environmentEndpoints{
+			rest:          DefaultRestBaseURL,
+			publicLinear:  DefaultWsPublicLinearURL,
+			publicSpot:    DefaultWsPublicSpotURL,
+			publicInverse: DefaultWsPublicInverseURL,
+			publicOption:  DefaultWsPublicOptionURL,
+			private:       DefaultWsPrivateURL,
+		}
+	}
+}
+
+// resolveEndpoint returns envDefault when current is empty or still equal
+// to the production default (the value DefaultConfig pre-populates), and
+// current otherwise. Without the second case, DefaultConfig() with
+// Testnet / Demo = true kept every production URL and silently talked to
+// mainnet with testnet / demo keys.
+func resolveEndpoint(current string, productionDefault string, envDefault string) string {
+	if current == "" || current == productionDefault {
+		return envDefault
+	}
+	return current
 }
 
 // validate ensures the minimal set of required fields is present.
