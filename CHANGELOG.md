@@ -12,7 +12,22 @@ documented in this file. The project follows [Semantic Versioning].
 ## [Unreleased]
 
 Bug fix, non-breaking for mainnet: endpoint resolution for Testnet /
-Demo Trading.
+Demo Trading. Connection liveness (2026-11-24).
+
+### Changed
+
+- **REST: HTTP/2 connection health check.** All requests to a host share
+  one HTTP/2 connection; when its flow stalled with the socket open (a
+  proxy flow, a dropped NAT entry) every request waited its timeout until
+  the connection died on its own — minutes. The transport now sends a PING
+  after 5 s without incoming frames and closes the connection if it is not
+  answered within 3 s; the next request dials a new one.
+- **WS: the reconnect backoff restarts after a healthy connection** (one
+  that lived ≥ 30 s, as in go-bitget). Before, the backoff only grew over
+  the process lifetime and after a handful of reconnects every later one
+  waited `ReconnectMaxBackoff`. Callers that set a short
+  `WS.ReadTimeout` (ping + a few seconds) to detect stalled sockets now
+  redial promptly.
 
 ### Fixed
 
