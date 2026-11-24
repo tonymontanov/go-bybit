@@ -11,8 +11,10 @@ documented in this file. The project follows [Semantic Versioning].
 
 ## [Unreleased]
 
-Bug fix, non-breaking for mainnet: endpoint resolution for Testnet /
-Demo Trading. Connection liveness (2026-11-24).
+## [v2.8.0] — 2026-11-24
+
+Connection liveness: a stalled REST connection or WebSocket is replaced
+within seconds instead of minutes. Non-breaking.
 
 ### Changed
 
@@ -29,6 +31,11 @@ Demo Trading. Connection liveness (2026-11-24).
   waited `ReconnectMaxBackoff`. Callers that set a short
   `WS.ReadTimeout` (ping + a few seconds) to detect stalled sockets now
   redial promptly.
+
+## [v2.7.2] — 2026-09-29
+
+Bug fix, non-breaking for mainnet: endpoint resolution for Testnet /
+Demo Trading.
 
 ### Fixed
 
