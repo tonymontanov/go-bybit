@@ -20,8 +20,9 @@ Demo Trading. Connection liveness (2026-11-24).
   one HTTP/2 connection; when its flow stalled with the socket open (a
   proxy flow, a dropped NAT entry) every request waited its timeout until
   the connection died on its own — minutes. The transport now sends a PING
-  after 5 s without incoming frames and closes the connection if it is not
-  answered within 3 s; the next request dials a new one.
+  after 1 s without incoming frames and closes the connection if it is not
+  answered within 2 s; the next request dials a new one, so a request caught
+  on a stalled connection fails within ~3 s.
 - **WS: the reconnect backoff restarts after a healthy connection** (one
   that lived ≥ 30 s, as in go-bitget). Before, the backoff only grew over
   the process lifetime and after a handful of reconnects every later one
